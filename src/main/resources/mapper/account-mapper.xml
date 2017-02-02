@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="me.junbin.gradprj.web.repository.AccountRepo">
+
+    <insert id="insert" parameterType="me.junbin.gradprj.web.domain.Account">
+        INSERT INTO accounts (id, principal, password, created_time, locked, valid)
+        VALUES (#{account.id}, #{account.principal},
+                #{account.password}, #{account.createdTime},
+                #{account.locked}, #{account.valid});
+    </insert>
+
+    <insert id="insertAll" parameterType="List">
+        INSERT INTO accounts (id, principal, password, created_time, locked, valid)
+        VALUES
+        <foreach collection="list" separator="," index="index" item="account">
+            (#{account.id}, #{account.principal}, #{account.password},
+            #{account.createdTime}, #{account.locked}, #{account.valid}))
+        </foreach>
+        ;
+    </insert>
+
+    <delete id="delete" parameterType="String">
+        DELETE FROM accounts
+        WHERE id = #{id};
+    </delete>
+
+    <update id="update" parameterType="Account">
+        UPDATE accounts
+        SET password = #{account.password}
+        WHERE id = #{account.id} AND valid = 1;
+    </update>
+
+    <select id="selectOne" parameterType="String">
+        SELECT *
+        FROM accounts
+        WHERE id = #{id};
+    </select>
+
+    <select id="selectAll" parameterType="String" resultType="Account">
+        SELECT *
+        FROM accounts;
+    </select>
+
+</mapper>
