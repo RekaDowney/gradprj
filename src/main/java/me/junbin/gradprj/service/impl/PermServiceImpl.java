@@ -2,7 +2,6 @@ package me.junbin.gradprj.service.impl;
 
 import me.junbin.commons.util.Args;
 import me.junbin.gradprj.domain.Perm;
-import me.junbin.gradprj.exception.PermIsInUseException;
 import me.junbin.gradprj.repository.PermRepo;
 import me.junbin.gradprj.service.PermService;
 import me.junbin.gradprj.util.validate.MyValidator;
@@ -39,7 +38,7 @@ public class PermServiceImpl implements PermService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "'permList'")})
     public int insert(Perm perm) {
-        MyValidator.nullThrows(perm, "permName", "permPattern", "permType");
+        MyValidator.nullThrowsForProperty(perm, "permName", "permPattern", "permType");
         log.debug("添加新权限{}", perm);
         return permRepo.insert(perm);
     }
@@ -50,7 +49,7 @@ public class PermServiceImpl implements PermService {
     public int batchInsert(List<Perm> permList) {
         Args.notNull(permList);
         for (Perm perm : permList) {
-            MyValidator.nullThrows(perm, "permName", "permPattern", "permType");
+            MyValidator.nullThrowsForProperty(perm, "permName", "permPattern", "permType");
         }
         log.debug("批量添加权限{}", permList);
         return permRepo.batchInsert(permList);
@@ -58,32 +57,23 @@ public class PermServiceImpl implements PermService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#id"), @CacheEvict(key = "'permList'")})
-    public int deletePerm(String id, String modifier, LocalDateTime modifiedTime) {
-        MyValidator.nullThrows(id, modifier, modifiedTime);
-        requirePermIsNoInUse(id);
-        log.debug("删除权限：{}，删除操作发起人：{}", id, modifier);
+    @Caching(evict = {@CacheEvict(key = "#perm.id"), @CacheEvict(key = "'permList'"),
+            @CacheEvict(cacheNames = {"roleCache"}, allEntries = true)})
+    public int delete(Perm perm) {
+        Args.notNull(perm);
+        String id = perm.getId();
+        String modifier = perm.getModifier();
+        LocalDateTime modifiedTime = perm.getModifiedTime();
+        log.debug("准备删除权限：{}，删除操作发起人：{}", id, modifier);
+        log.debug("撤销权限{}与角色的关联", id);
+        permRepo.detachAssociatedRole(id);
+        log.debug("删除权限：{}", id);
         return permRepo.deletePerm(id, modifier, modifiedTime);
     }
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#perm.id"),
-            @CacheEvict(key = "#perm.id + 'isUse'"),
-            @CacheEvict(key = "'permList'")})
-    public int deletePerm(Perm perm) {
-        MyValidator.nullThrows(perm, "id", "modifier", "modifiedTime");
-        String id = perm.getId();
-        requirePermIsNoInUse(id);
-        String modifier = perm.getModifier();
-        log.debug("删除权限：{}，删除操作发起人：{}", id, modifier);
-        return permRepo.deletePerm(id, modifier, perm.getModifiedTime());
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#perm.id"),
-            @CacheEvict(key = "'permList'"),
+    @Caching(evict = {@CacheEvict(key = "#perm.id"), @CacheEvict(key = "'permList'"),
             @CacheEvict(cacheNames = {"roleCache"}, allEntries = true)})
     public int update(Perm perm) {
         Args.notNull(perm);
@@ -97,10 +87,12 @@ public class PermServiceImpl implements PermService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#id"),
-            @CacheEvict(key = "#id + 'isUse'"),
-            @CacheEvict(key = "'permList'")})
-    public int activate(String id, String modifier, LocalDateTime modifiedTime) {
+    @Caching(evict = {@CacheEvict(key = "#perm.id"), @CacheEvict(key = "'permList'")})
+    public int activate(Perm perm) {
+        Args.notNull(perm);
+        String id = perm.getId();
+        String modifier = perm.getModifier();
+        LocalDateTime modifiedTime = perm.getModifiedTime();
         MyValidator.nullThrows(id, modifier, modifiedTime);
         log.debug("激活权限：{}，激活操作发起人：{}", id, modifier);
         return permRepo.activate(id, modifier, modifiedTime);
@@ -108,49 +100,36 @@ public class PermServiceImpl implements PermService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#perm.id"),
-            @CacheEvict(key = "#perm.id + 'isUse'"),
-            @CacheEvict(key = "'permList'")})
-    public int activate(Perm perm) {
-        MyValidator.nullThrows(perm, "id", "modifier", "modifiedTime");
+    @Caching(evict = {@CacheEvict(key = "#perm.id"), @CacheEvict(key = "'permList'"),
+            @CacheEvict(cacheNames = {"roleCache"}, allEntries = true)})
+    public int inactivate(Perm perm) {
+        Args.notNull(perm);
         String id = perm.getId();
         String modifier = perm.getModifier();
-        log.debug("激活权限：{}，激活操作发起人：{}", id, modifier);
-        return permRepo.activate(id, modifier, perm.getModifiedTime());
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#id"),
-            @CacheEvict(key = "#id + 'isUse'"),
-            @CacheEvict(key = "'permList'")})
-    public int inactivate(String id, String modifier, LocalDateTime modifiedTime) {
+        LocalDateTime modifiedTime = perm.getModifiedTime();
         MyValidator.nullThrows(id, modifier, modifiedTime);
-        requirePermIsNoInUse(id);
-        log.debug("使权限：{}失活，失活操作发起人：{}", id, modifier);
+        log.debug("准备使权限：{}失活，失活操作发起人：{}", id, modifier);
+        log.debug("撤销权限{}与角色的关联", id);
+        permRepo.detachAssociatedRole(id);
+        log.debug("使权限{}失活", id);
         return permRepo.inactivate(id, modifier, modifiedTime);
     }
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#perm.id"),
-            @CacheEvict(key = "#perm.id + 'isUse'"),
-            @CacheEvict(key = "'permList'")})
-    public int inactivate(Perm perm) {
-        MyValidator.nullThrows(perm, "id", "modifier", "modifiedTime");
-        String id = perm.getId();
-        requirePermIsNoInUse(id);
-        String modifier = perm.getModifier();
-        log.debug("使权限：{}失活，失活操作发起人：{}", id, modifier);
-        return permRepo.inactivate(id, modifier, perm.getModifiedTime());
+    @Caching(evict = {@CacheEvict(key = "#id"), @CacheEvict(key = "'permList'"),
+            @CacheEvict(cacheNames = {"roleCache"}, allEntries = true)})
+    public int detachAssociatedRole(String id) {
+        Args.notNull(id);
+        log.debug("撤销权限{}与角色的关联", id);
+        return permRepo.detachAssociatedRole(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Caching(evict = {@CacheEvict(key = "#id + 'isUse'")})
-    public boolean isInUse(String id) {
-        log.debug("查询权限{}是否正被使用", id);
-        return permRepo.isInUse(id);
+    public boolean isAssociateWithRole(String id) {
+        log.debug("查询权限{}是否正被角色所关联", id);
+        return permRepo.isAssociateWithRole(id);
     }
 
     @Override
@@ -168,14 +147,6 @@ public class PermServiceImpl implements PermService {
     public List<Perm> selectAll() {
         log.debug("查询所有权限信息");
         return permRepo.selectAll();
-    }
-
-    private void requirePermIsNoInUse(String id) {
-        if (permRepo.isInUse(id)) {
-            String errMsg = String.format("当前权限%s正在被使用，请先撤销相关权限分配", id);
-            log.warn(errMsg);
-            throw new PermIsInUseException(errMsg);
-        }
     }
 
 }

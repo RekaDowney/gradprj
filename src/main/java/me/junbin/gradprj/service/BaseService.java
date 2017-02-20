@@ -18,18 +18,12 @@ public interface BaseService<DOMAIN extends BaseDomain, ID extends Serializable>
 
     int batchInsert(List<DOMAIN> domains);
 
-/*
-    int delete(ID id);
-
     int delete(DOMAIN domain);
-*/
 
     DOMAIN selectById(ID id);
 
     List<DOMAIN> selectAll();
 
-/*
     int update(DOMAIN domain);
-*/
 
 }

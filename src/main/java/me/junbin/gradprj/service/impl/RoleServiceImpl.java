@@ -1,9 +1,7 @@
 package me.junbin.gradprj.service.impl;
 
 import me.junbin.commons.util.Args;
-import me.junbin.gradprj.domain.Perm;
 import me.junbin.gradprj.domain.Role;
-import me.junbin.gradprj.exception.RoleIsInUseException;
 import me.junbin.gradprj.repository.RoleRepo;
 import me.junbin.gradprj.service.RoleService;
 import me.junbin.gradprj.util.validate.MyValidator;
@@ -18,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-
-import static me.junbin.gradprj.util.ArrayUtils.toArray;
 
 /**
  * @author : Zhong Junbin
@@ -51,7 +47,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "'roleList'")})
     public int insert(Role role) {
-        MyValidator.nullThrows(role, "id", "roleName", "roleNameCn");
+        MyValidator.nullThrowsForProperty(role, "id", "roleName", "roleNameCn");
         log.debug("添加角色{}", role);
         return roleRepo.insert(role);
     }
@@ -62,7 +58,7 @@ public class RoleServiceImpl implements RoleService {
     public int batchInsert(List<Role> roles) {
         MyValidator.emptyThrows(roles);
         for (Role role : roles) {
-            MyValidator.nullThrows(role, "id", "roleName", "roleNameCn");
+            MyValidator.nullThrowsForProperty(role, "id", "roleName", "roleNameCn");
         }
         log.debug("批量添加角色{}", roles);
         return roleRepo.batchInsert(roles);
@@ -70,27 +66,27 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
-    public int deleteRole(Role role) {
+    @Caching(evict = {@CacheEvict(key = "#role.id"), @CacheEvict(key = "'roleList'"),
+            @CacheEvict(cacheNames = {"accountCache"}, allEntries = true)})
+    public int delete(Role role) {
         Args.notNull(role);
         String id = role.getId();
-        log.debug("移除角色{}关联的所有权限", id);
-        roleRepo.revokeAllPerms(id);
-        log.debug("移除角色{}关联的所有账户", id);
-        roleRepo.revokeAllAssociateAccount(id);
         String modifier = role.getModifier();
         LocalDateTime modifiedTime = role.getModifiedTime();
         MyValidator.nullThrows(id, modifier, modifiedTime);
-        log.debug("删除角色{}，删除操作发起人{}", id, modifier);
+        log.debug("准备删除角色{}，删除操作发起人{}", id, modifier);
+        log.debug("移除角色{}关联的所有权限", id);
+        roleRepo.revokeAllPerms(id);
+        log.debug("移除角色{}关联的所有账户", id);
+        roleRepo.detachAssociateAccount(id);
+        log.debug("删除角色{}", id);
         return roleRepo.deleteRole(id, modifier, modifiedTime);
     }
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'")})
+    @Caching(evict = {@CacheEvict(key = "#role.id"), @CacheEvict(key = "'roleList'"),
+            @CacheEvict(cacheNames = {"accountCache"}, allEntries = true)})
     public int update(Role role) {
         Args.notNull(role);
         String id = role.getId();
@@ -103,9 +99,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
+    @Caching(evict = {@CacheEvict(key = "#role.id"), @CacheEvict(key = "'roleList'")})
     public int activate(Role role) {
         Args.notNull(role);
         String id = role.getId();
@@ -118,28 +112,26 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
+    @Caching(evict = {@CacheEvict(key = "#role.id"), @CacheEvict(key = "'roleList'"),
+            @CacheEvict(cacheNames = {"accountCache"}, allEntries = true)})
     public int inactivate(Role role) {
         Args.notNull(role);
         String id = role.getId();
-        log.debug("移除角色{}关联的所有权限", id);
-        roleRepo.revokeAllPerms(id);
-        log.debug("移除角色{}关联的所有账户", id);
-        roleRepo.revokeAllAssociateAccount(id);
         String modifier = role.getModifier();
         LocalDateTime modifiedTime = role.getModifiedTime();
         MyValidator.nullThrows(id, modifier, modifiedTime);
-        log.debug("使角色{}失活，失活操作发起人：{}", id, modifier);
+        log.debug("准备使角色{}失活，失活操作发起人：{}", id, modifier);
+        log.debug("移除角色{}关联的所有权限", id);
+        roleRepo.revokeAllPerms(id);
+        log.debug("移除角色{}关联的所有账户", id);
+        roleRepo.detachAssociateAccount(id);
+        log.debug("使角色{}失活", id);
         return roleRepo.inactivate(id, modifier, modifiedTime);
     }
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#roleId"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#roleId + 'isUse'")})
+    @Caching(evict = {@CacheEvict(key = "#roleId"), @CacheEvict(key = "'roleList'")})
     public int grantPerm(String roleId, String firstPerm, String... morePerms) {
         MyValidator.nullThrows(roleId, firstPerm);
         log.debug("授予角色{}权限{}，{}", roleId, firstPerm, Arrays.toString(morePerms));
@@ -148,9 +140,18 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#roleId"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#roleId + 'isUse'")})
+    @Caching(evict = {@CacheEvict(key = "#role.id"), @CacheEvict(key = "'roleList'")})
+    public int grantPerm(Role role, String firstPerm, String... morePerms) {
+        Args.notNull(role);
+        String id = role.getId();
+        log.debug("获取当前 Aop 对 RoleService 的代理");
+        RoleService proxy = ((RoleService) AopContext.currentProxy());
+        return proxy.grantPerm(id, firstPerm, morePerms);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#roleId"), @CacheEvict(key = "'roleList'")})
     public int grantPerm(String roleId, List<String> permIdList) {
         Args.notNull(roleId);
         MyValidator.emptyThrows(permIdList);
@@ -160,25 +161,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
-    public int grantPerm(Role role, String firstPerm, String... morePerms) {
-        MyValidator.nullThrows(role, "id");
-        Args.notNull(firstPerm);
-        log.debug("获取当前 Aop 对 RoleService 的代理");
-        RoleService proxy = ((RoleService) AopContext.currentProxy());
-        return proxy.grantPerm(role.getId(), firstPerm, morePerms);
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
+    @Caching(evict = {@CacheEvict(key = "#role.id"), @CacheEvict(key = "'roleList'")})
     public int grantPerm(Role role, List<String> permIdList) {
-        MyValidator.nullThrows(role, "id");
-        MyValidator.emptyThrows(permIdList);
+        Args.notNull(role);
         log.debug("获取当前 Aop 对 RoleService 的代理");
         RoleService proxy = ((RoleService) AopContext.currentProxy());
         return proxy.grantPerm(role.getId(), permIdList);
@@ -186,99 +171,23 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
-    public int grantPerm(Role role, Perm firstPerm, Perm... morePerms) {
-        MyValidator.nullThrows(role, "id");
-        MyValidator.nullThrows(firstPerm, "id");
-        String[] more = new String[morePerms.length];
-        int index = 0;
-        for (Perm perm : morePerms) {
-            MyValidator.nullThrows(perm, "id");
-            more[index++] = perm.getId();
-        }
-        log.debug("获取当前 Aop 对 RoleService 的代理");
-        RoleService proxy = ((RoleService) AopContext.currentProxy());
-        return proxy.grantPerm(role.getId(), firstPerm.getId(), more);
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#roleId"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#roleId + 'isUse'")})
-    public int revokePerm(String roleId, String firstPerm, String... morePerms) {
-        MyValidator.nullThrows(roleId, firstPerm);
-        requireRoleIsNotInUse(roleId);
-        log.debug("撤销角色{}可能拥有的{}，{}权限", roleId, firstPerm, Arrays.toString(morePerms));
-        return roleRepo.revokePerm(roleId, firstPerm, morePerms);
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
-    public int revokePerm(Role role, String firstPerm, String... morePerms) {
-        MyValidator.nullThrows(role, "id");
-        String roleId = role.getId();
-        requireRoleIsNotInUse(roleId);
-        log.debug("撤销角色{}可能拥有的{}，{}权限", roleId, firstPerm, Arrays.toString(morePerms));
-        return roleRepo.revokePerm(roleId, firstPerm, morePerms);
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#roleId"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#roleId + 'isUse'")})
-    public int revokePerm(String roleId, List<String> permIdList) {
-        Args.notNull(roleId);
-        MyValidator.emptyThrows(permIdList);
-        requireRoleIsNotInUse(roleId);
-        log.debug("撤销角色{}可能拥有的{}权限", roleId, permIdList);
-        String firstPerm = permIdList.get(0);
-        int permSize = permIdList.size();
-        if (permSize > 1) {
-            String[] morePerms = toArray(permIdList, String.class, 1);
-            return roleRepo.revokePerm(roleId, firstPerm, morePerms);
-        } else {
-            return roleRepo.revokePerm(roleId, firstPerm);
-        }
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#role.id"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#role.id + 'isUse'")})
-    public int revokePerm(Role role, List<String> permIdList) {
-        MyValidator.nullThrows(role, "id");
-        MyValidator.emptyThrows(permIdList);
-        String roleId = role.getId();
-        requireRoleIsNotInUse(roleId);
-        log.debug("撤销角色{}可能拥有的{}权限", roleId, permIdList);
-        String firstPerm = permIdList.get(0);
-        int permSize = permIdList.size();
-        if (permSize > 1) {
-            String[] morePerms = toArray(permIdList, String.class, 1);
-            return roleRepo.revokePerm(roleId, firstPerm, morePerms);
-        } else {
-            return roleRepo.revokePerm(roleId, firstPerm);
-        }
-    }
-
-    @Override
-    @Transactional
-    @Caching(evict = {@CacheEvict(key = "#roleId"),
-            @CacheEvict(key = "'roleList'"),
-            @CacheEvict(key = "#roleId + 'isUse'")})
+    @Caching(evict = {@CacheEvict(key = "#roleId"), @CacheEvict(key = "'roleList'"),
+            @CacheEvict(cacheNames = {"accountCache"}, allEntries = true)})
     public int revokeAllPerms(String roleId) {
         Args.notNull(roleId);
-        requireRoleIsNotInUse(roleId);
         log.debug("清空角色{}拥有的所有权限", roleId);
+        roleRepo.revokeAllPerms(roleId);
         return roleRepo.revokeAllPerms(roleId);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#roleId"), @CacheEvict(key = "'roleList'"),
+            @CacheEvict(cacheNames = {"accountCache"}, allEntries = true)})
+    public int detachAssociateAccount(String roleId) {
+        Args.notNull(roleId);
+        log.debug("撤销角色{}关联的所有用户", roleId);
+        return roleRepo.detachAssociateAccount(roleId);
     }
 
     @Override
@@ -299,14 +208,6 @@ public class RoleServiceImpl implements RoleService {
         return roleRepo.selectById(id);
     }
 
-/*
-    @Override
-    public Role selectByRoleName(String roleName) {
-        log.debug("查询名称为{}的角色", roleName);
-        return null;
-    }
-*/
-
     @Override
     @Transactional(readOnly = true)
     @Caching(cacheable = {@Cacheable(key = "'roleList'")})
@@ -317,33 +218,18 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Caching(cacheable = {@Cacheable(key = "#id + 'isUse'")})
-    public boolean isInUse(String id) {
+    public boolean isAssociateWithAccount(String id) {
         Args.notNull(id);
         log.debug("查询角色{}是否正被账户所使用", id);
-        if (!roleRepo.isAssociateWithAccount(id)) {
-            log.debug("查询角色{}是否关联着权限", id);
-            return roleRepo.isAssociateWithPerm(id);
-        }
-        return true;
+        return roleRepo.isAssociateWithAccount(id);
     }
 
-    private void requireRoleIsNotInUse(String id) {
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isAssociateWithPerm(String id) {
         Args.notNull(id);
-        log.debug("查询角色{}是否正被账户所使用", id);
-        String errMsg = null;
-        if (roleRepo.isAssociateWithAccount(id)) {
-            errMsg = String.format("当前角色%s正在被使用，请先撤销相关角色分配", id);
-        } else {
-            log.debug("查询角色{}是否关联着权限", id);
-            if (roleRepo.isAssociateWithPerm(id)) {
-                errMsg = String.format("当前角色%s正在被使用，请先撤销相关权限关联", id);
-            }
-        }
-        if (errMsg != null) {
-            log.warn(errMsg);
-            throw new RoleIsInUseException(errMsg);
-        }
+        log.debug("查询角色{}是否正分配有权限", id);
+        return roleRepo.isAssociateWithPerm(id);
     }
 
 }

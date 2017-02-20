@@ -111,7 +111,7 @@
         </include>
         FROM account a LEFT JOIN user u ON (a.id = u.id)
         LEFT JOIN photo p ON(u.portrait = p.id)
-        WHERE a.id = #{id}
+        WHERE a.id = #{id} AND a.valid = TRUE
     </select>
 
     <select id="selectByPrincipal" parameterType="String" resultMap="accountUserPhotoMap">
@@ -129,7 +129,7 @@
         </include>
         FROM account a LEFT JOIN user u ON (a.id = u.id)
         LEFT JOIN photo p ON(u.portrait = p.id)
-        WHERE a.principal = #{principal}
+        WHERE a.principal = #{principal} AND a.valid = TRUE
     </select>
 
     <select id="selectAll" parameterType="String" resultMap="accountUserMap">
@@ -141,7 +141,7 @@
         <include refid="me.junbin.gradprj.repository.UserRepo.userColumns">
             <property name="user" value="u"/>
         </include>
-        FROM account a LEFT JOIN user u ON(a.id = u.id)
+        FROM account a LEFT JOIN user u ON(a.id = u.id) AND a.valid = TRUE
     </select>
 
     <select id="acquireRoles" resultMap="me.junbin.gradprj.repository.RoleRepo.rolePermIdMap">

@@ -40,8 +40,9 @@ public class UserServiceImpl implements UserService {
             @CacheEvict(cacheNames = {"accountCache"}, key = "'accountList'")})
     public int update(User user) {
         Args.notNull(user);
-        Args.notEmpty(user.getId());
-        log.debug("更新id为{}的用户信息{}", user.getId(), user);
+        String id = user.getId();
+        Args.notNull(id);
+        log.debug("更新id为{}的用户信息{}", id, user);
         return userRepo.update(user);
     }
 
@@ -52,8 +53,8 @@ public class UserServiceImpl implements UserService {
             @CacheEvict(cacheNames = {"accountCache"}, key = "#userId"),
             @CacheEvict(cacheNames = {"accountCache"}, key = "'accountList'")})
     public int updatePortrait(String userId, String photoId) {
-        Args.notEmpty(userId);
-        Args.notEmpty(photoId);
+        Args.notNull(userId);
+        Args.notNull(photoId);
         log.debug("更新id为{}的用户头像[新头像id：{}]", userId, photoId);
         return userRepo.updatePortrait(userId, photoId);
     }
@@ -65,10 +66,10 @@ public class UserServiceImpl implements UserService {
             @CacheEvict(cacheNames = {"accountCache"}, key = "#user.id"),
             @CacheEvict(cacheNames = {"accountCache"}, key = "'accountList'")})
     public int updatePortrait(User user, Photo photo) {
-        MyValidator.nullThrows(user, "id");
-        MyValidator.nullThrows(photo, "id");
+        MyValidator.nullThrows(user, photo);
         String userId = user.getId();
         String photoId = photo.getId();
+        MyValidator.nullThrows(userId, photoId);
         log.debug("更新id为{}的用户头像[新头像id：{}]", userId, photoId);
         return userRepo.updatePortrait(userId, photoId);
     }
@@ -77,7 +78,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Caching(cacheable = {@Cacheable(key = "#id")})
     public User selectById(String id) {
-        Args.notEmpty(id);
+        Args.notNull(id);
         log.debug("查询id为{}的用户", id);
         return userRepo.selectById(id);
     }

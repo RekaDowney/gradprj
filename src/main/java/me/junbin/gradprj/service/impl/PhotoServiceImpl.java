@@ -35,7 +35,7 @@ public class PhotoServiceImpl implements PhotoService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "'photoList'")})
     public int insert(Photo photo) {
-        MyValidator.nullThrows(photo, "id", "path", "createdTime");
+        MyValidator.nullThrowsForProperty(photo, "id", "path", "createdTime");
         log.debug("添加新图片{}", photo.toString());
         return photoRepo.insert(photo);
     }
@@ -44,9 +44,9 @@ public class PhotoServiceImpl implements PhotoService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "'photoList'")})
     public int batchInsert(List<Photo> photos) {
-        Args.notNull(photos);
+        MyValidator.emptyThrows(photos);
         for (Photo photo : photos) {
-            MyValidator.nullThrows(photo, "id", "path", "createdTime");
+            MyValidator.nullThrowsForProperty(photo, "id", "path", "createdTime");
         }
         log.debug("批量添加图片{}", photos.toString());
         return photoRepo.batchInsert(photos);
@@ -56,7 +56,7 @@ public class PhotoServiceImpl implements PhotoService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "#id"), @CacheEvict(key = "'photoList'")})
     public int delete(String id) {
-        Args.notEmpty(id);
+        Args.notNull(id);
         log.debug("删除id为{}的图片", id);
         return photoRepo.delete(id);
     }
@@ -67,7 +67,7 @@ public class PhotoServiceImpl implements PhotoService {
     public int delete(Photo photo) {
         Args.notNull(photo);
         String id = photo.getId();
-        Args.notEmpty(id);
+        Args.notNull(id);
         log.debug("删除id为{}的图片", id);
         return photoRepo.delete(id);
     }
@@ -76,7 +76,7 @@ public class PhotoServiceImpl implements PhotoService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "#photo.id"), @CacheEvict(key = "'photoList'")})
     public int update(Photo photo) {
-        MyValidator.nullThrows(photo, "id", "path", "createdTime");
+        MyValidator.nullThrowsForProperty(photo, "id", "path", "createdTime");
         log.debug("更新id为{}的图片信息{}", photo.getId(), photo);
         return photoRepo.update(photo);
     }
@@ -85,7 +85,7 @@ public class PhotoServiceImpl implements PhotoService {
     @Transactional(readOnly = true)
     @Caching(cacheable = {@Cacheable(key = "#id")})
     public Photo selectById(String id) {
-        Args.notEmpty(id);
+        Args.notNull(id);
         log.debug("查询id为{}的图片信息", id);
         return photoRepo.selectById(id);
     }

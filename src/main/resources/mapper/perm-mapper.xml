@@ -74,11 +74,16 @@
         WHERE id = #{id}
     </update>
 
-    <select id="isInUse" parameterType="String" resultType="Boolean">
+    <select id="isAssociateWithRole" parameterType="String" resultType="Boolean">
         SELECT count(*)
         FROM role_perm
         WHERE perm_id = #{id}
     </select>
+
+    <delete id="detachAssociatedRole" parameterType="String">
+        DELETE FROM role_perm
+        WHERE perm_id = #{id}
+    </delete>
 
     <sql id="permColumns">
         ${perm}.id p_id,
@@ -101,7 +106,7 @@
         <include refid="permColumns">
             <property name="perm" value="p"/>
         </include>
-        FROM perm p WHERE p.id = #{id}
+        FROM perm p WHERE p.id = #{id} AND p.valid = TRUE
     </select>
 
     <select id="selectAll" resultMap="permMap">
@@ -109,7 +114,7 @@
         <include refid="permColumns">
             <property name="perm" value="p"/>
         </include>
-        FROM perm p
+        FROM perm p AND p.valid = TRUE
     </select>
 
     <resultMap id="permMap" type="Perm">

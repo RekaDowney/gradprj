@@ -79,7 +79,7 @@ public interface RoleRepo extends BaseRepo<Role, String> {
      */
     int revokeAllPerms(@Param("roleId") String roleId);
 
-    int revokeAllAssociateAccount(@Param("roleId") String roleId);
+    int detachAssociateAccount(@Param("roleId") String roleId);
 
     boolean isAssociateWithAccount(String id);
 

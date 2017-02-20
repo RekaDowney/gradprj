@@ -34,5 +34,7 @@ public interface PermRepo extends BaseRepo<Perm, String> {
                    @Param("modifier") String modifier,
                    @Param("modifiedTime") LocalDateTime modifiedTime);
 
-    boolean isInUse(String id);
+    int detachAssociatedRole(String id);
+
+    boolean isAssociateWithRole(String id);
 }

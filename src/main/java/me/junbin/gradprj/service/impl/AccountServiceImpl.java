@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "'accountList'")})
     public int insert(Account account) {
-        MyValidator.nullThrows(account, "id", "principal", "password");
+        MyValidator.nullThrowsForProperty(account, "id", "principal", "password");
         log.debug("添加新账户{}", account.toString());
         return accountRepo.insert(account);
     }
@@ -47,8 +48,9 @@ public class AccountServiceImpl implements AccountService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "'accountList'")})
     public int batchInsert(List<Account> accounts) {
+        MyValidator.emptyThrows(accounts);
         for (Account account : accounts) {
-            MyValidator.nullThrows(account, "id", "principal", "password");
+            MyValidator.nullThrowsForProperty(account, "id", "principal", "password");
         }
         log.debug("添加多个账户{}", accounts.toString());
         return accountRepo.batchInsert(accounts);
@@ -56,24 +58,18 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    @Caching(evict = {@CacheEvict(key = "#id"), @CacheEvict(key = "'accountList'")})
-    public int delete(String id, String modifier, LocalDateTime modifiedTime) {
-        MyValidator.nullThrows(id, modifier, modifiedTime);
-        log.debug("准备删除id为{}的账户，操作操作发起人：{}", id, modifier);
-        log.debug("撤销账户{}拥有的所有角色", id);
-        accountRepo.revokeAllRoles(id);
-        log.debug("执行删除操作");
-        return accountRepo.deleteAccount(id, modifier, modifiedTime);
-    }
-
-    @Override
-    @Transactional
     @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
     public int delete(Account account) {
         Args.notNull(account);
-        log.debug("获取当前 Aop 对 AccountService 的代理");
-        AccountService proxy = (AccountService) AopContext.currentProxy();
-        return proxy.delete(account.getId(), account.getModifier(), account.getModifiedTime());
+        String id = account.getId();
+        String modifier = account.getModifier();
+        LocalDateTime modifiedTime = account.getModifiedTime();
+        MyValidator.nullThrows(id, modifier, modifiedTime);
+        log.debug("准备删除账户{}，删除操作发起人{}", id, modifier);
+        log.debug("撤销账户{}拥有的所有角色", id);
+        accountRepo.revokeAllRoles(id);
+        log.debug("删除账户{}", id);
+        return accountRepo.deleteAccount(id, modifier, modifiedTime);
     }
 
     @Transactional
@@ -89,8 +85,79 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
     public int lock(Account account) {
-        return 1;
+        Args.notNull(account);
+        String id = account.getId();
+        String modifier = account.getModifier();
+        LocalDateTime modifiedTime = account.getModifiedTime();
+        MyValidator.nullThrows(id, modifier, modifiedTime);
+        log.debug("锁定账户{}，锁定操作发起人{}", id, modifier);
+        return accountRepo.lock(id, modifier, modifiedTime);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
+    public int unlock(Account account) {
+        Args.notNull(account);
+        String id = account.getId();
+        String modifier = account.getModifier();
+        LocalDateTime modifiedTime = account.getModifiedTime();
+        MyValidator.nullThrows(id, modifier, modifiedTime);
+        log.debug("解锁账户{}，解锁操作发起人{}", id, modifier);
+        return accountRepo.unlock(id, modifier, modifiedTime);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#accountId"), @CacheEvict(key = "'accountList'")})
+    public int grantRole(String accountId, String firstRole, String... moreRoles) {
+        MyValidator.nullThrows(accountId, firstRole);
+        log.debug("授予账户{}角色{}", accountId, firstRole, Arrays.toString(moreRoles));
+        return accountRepo.grantRole(accountId, firstRole, moreRoles);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
+    public int grantRole(Account account, String firstRole, String... moreRoles) {
+        Args.notNull(account);
+        String id = account.getId();
+        log.debug("获取当前 Aop 对 AccountService 的代理");
+        AccountService proxy = (AccountService) AopContext.currentProxy();
+        return proxy.grantRole(id, firstRole, moreRoles);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#accountId"), @CacheEvict(key = "'accountList'")})
+    public int grantRole(String accountId, List<String> roleIdList) {
+        Args.notNull(accountId);
+        MyValidator.emptyThrows(roleIdList);
+        log.debug("授予账户{}角色{}", accountId, roleIdList);
+        return accountRepo.grantRoleList(accountId, roleIdList);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
+    public int grantRole(Account account, List<String> roleIdList) {
+        Args.notNull(account);
+        String id = account.getId();
+        log.debug("获取当前 Aop 对 AccountService 的代理");
+        AccountService proxy = (AccountService) AopContext.currentProxy();
+        return proxy.grantRole(id, roleIdList);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#accountId"), @CacheEvict(key = "'accountList'")})
+    public int revokeAllRoles(String accountId) {
+        Args.notNull(accountId);
+        log.debug("撤销账户{}拥有的所有角色", accountId);
+        return accountRepo.revokeAllRoles(accountId);
     }
 
     @Override
@@ -121,7 +188,6 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional(readOnly = true)
-    @Caching(cacheable = {@Cacheable(key = "#accountId + '_roles'")})
     public List<Role> acquireRoles(String accountId) {
         Args.notNull(accountId);
         log.debug("获取账户{}的所有角色", accountId);

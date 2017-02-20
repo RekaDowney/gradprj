@@ -27,7 +27,7 @@ public abstract class MyValidator {
     }
 */
 
-    public static void nullThrows(Object target, String... properties) {
+    public static void nullThrowsForProperty(Object target, String... properties) {
         nullThrows(PropertyIsNullException.class, target, properties);
     }
 

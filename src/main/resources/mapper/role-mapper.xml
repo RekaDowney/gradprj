@@ -106,7 +106,7 @@
         WHERE role_id = #{roleId}
     </update>
 
-    <update id="revokeAllAssociateAccount">
+    <update id="detachAssociateAccount">
         DELETE FROM account_role
         WHERE role_id = #{roleId}
     </update>
@@ -133,7 +133,7 @@
         rp.perm_id perm_id
         FROM role r
         LEFT JOIN role_perm rp ON (r.id = rp.role_id)
-        WHERE r.id = #{id}
+        WHERE r.id = #{id} AND r.valid = TRUE
     </select>
 
     <select id="selectByRoleName" parameterType="String" resultMap="rolePermIdMap">
@@ -145,7 +145,7 @@
         rp.perm_id perm_id
         FROM role r
         LEFT JOIN role_perm rp ON (r.id = rp.role_id)
-        WHERE r.role_name = #{roleName}
+        WHERE r.role_name = #{roleName} AND r.valid = TRUE
     </select>
 
     <select id="selectAll" resultMap="rolePermIdMap">
