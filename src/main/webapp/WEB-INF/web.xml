@@ -32,6 +32,12 @@
         <listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
     </listener>
 
+    <!-- 通过 ThreadLocal 将当前线程的 HttpServletRequest 暴露到 RequestContextHolder 中，Web 请求时，非 Web 层可以通过该工具获取请求 -->
+    <!-- 确保 servlet API 必须大于 2.4 -->
+    <listener>
+        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+    </listener>
+
     <!-- SpringMVC -->
     <servlet>
         <servlet-name>shiro</servlet-name>
@@ -39,8 +45,7 @@
         <init-param>
             <param-name>contextConfigLocation</param-name>
             <param-value>
-                classpath:config/spring4mvc.xml,
-                classpath:config/spring4mvc-*.xml
+                classpath:config/spring4mvc.xml
             </param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>

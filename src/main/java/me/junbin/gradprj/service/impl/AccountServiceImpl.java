@@ -1,0 +1,131 @@
+package me.junbin.gradprj.service.impl;
+
+import me.junbin.commons.util.Args;
+import me.junbin.gradprj.domain.Account;
+import me.junbin.gradprj.domain.Role;
+import me.junbin.gradprj.repository.AccountRepo;
+import me.junbin.gradprj.service.AccountService;
+import me.junbin.gradprj.util.validate.MyValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * @author : Zhong Junbin
+ * @email : <a href="mailto:rekadowney@163.com">发送邮件</a>
+ * @createDate : 2017/2/1 13:19
+ * @description :
+ */
+@Service("accountService")
+@CacheConfig(cacheNames = "accountCache")
+public class AccountServiceImpl implements AccountService {
+
+    @Autowired
+    private AccountRepo accountRepo;
+    private static final Logger log = LoggerFactory.getLogger(AccountServiceImpl.class);
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "'accountList'")})
+    public int insert(Account account) {
+        MyValidator.nullThrows(account, "id", "principal", "password");
+        log.debug("添加新账户{}", account.toString());
+        return accountRepo.insert(account);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "'accountList'")})
+    public int batchInsert(List<Account> accounts) {
+        for (Account account : accounts) {
+            MyValidator.nullThrows(account, "id", "principal", "password");
+        }
+        log.debug("添加多个账户{}", accounts.toString());
+        return accountRepo.batchInsert(accounts);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#id"), @CacheEvict(key = "'accountList'")})
+    public int delete(String id, String modifier, LocalDateTime modifiedTime) {
+        MyValidator.nullThrows(id, modifier, modifiedTime);
+        log.debug("准备删除id为{}的账户，操作操作发起人：{}", id, modifier);
+        log.debug("撤销账户{}拥有的所有角色", id);
+        accountRepo.revokeAllRoles(id);
+        log.debug("执行删除操作");
+        return accountRepo.deleteAccount(id, modifier, modifiedTime);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
+    public int delete(Account account) {
+        Args.notNull(account);
+        log.debug("获取当前 Aop 对 AccountService 的代理");
+        AccountService proxy = (AccountService) AopContext.currentProxy();
+        return proxy.delete(account.getId(), account.getModifier(), account.getModifiedTime());
+    }
+
+    @Transactional
+    @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
+    public int update(Account account) {
+        Args.notNull(account);
+        String id = account.getId();
+        String modifier = account.getModifier();
+        LocalDateTime modifiedTime = account.getModifiedTime();
+        MyValidator.nullThrows(id, modifier, modifiedTime);
+        log.debug("更新账户{}，更新操作发起人{}", id, modifier);
+        return accountRepo.update(account);
+    }
+
+    @Override
+    public int lock(Account account) {
+        return 1;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Caching(cacheable = {@Cacheable(key = "#id")})
+    public Account selectById(String id) {
+        Args.notNull(id);
+        log.debug("查询 id 为{}的账户", id);
+        return accountRepo.selectById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Caching(cacheable = {@Cacheable(key = "#principal")})
+    public Account selectByPrincipal(String principal) {
+        Args.notNull(principal);
+        log.debug("查询身份为{}的账户", principal);
+        return accountRepo.selectByPrincipal(principal);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Caching(cacheable = {@Cacheable(key = "'accountList'")})
+    public List<Account> selectAll() {
+        log.debug("查询账户列表");
+        return accountRepo.selectAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @Caching(cacheable = {@Cacheable(key = "#accountId + '_roles'")})
+    public List<Role> acquireRoles(String accountId) {
+        Args.notNull(accountId);
+        log.debug("获取账户{}的所有角色", accountId);
+        return accountRepo.acquireRoles(accountId);
+    }
+
+}

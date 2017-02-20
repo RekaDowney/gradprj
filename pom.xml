@@ -71,7 +71,7 @@
         <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
         <skip.module.test>true</skip.module.test>
         <!-- web config -->
-        <module.context.path>/web</module.context.path>
+        <module.context.path>/gradprj</module.context.path>
         <module.port>80</module.port>
         <!-- 虚拟目录配置，仅使用 IDE 开发时需要用到 -->
         <image.mapping.url>/mapping/image</image.mapping.url>
@@ -80,6 +80,8 @@
         <doc.mapping.url>/mapping/doc</doc.mapping.url>
         <doc.mapping.location>L:/gradprj/doc</doc.mapping.location>
         <!--<doc.mapping.location>/usr/local/gradprj/doc</doc.mapping.location>-->
+        <me.commons.version>1.1</me.commons.version>
+        <joor.version>0.9.6</joor.version>
     </properties>
 
     <dependencies>
@@ -202,6 +204,14 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>joor</artifactId>
+        </dependency>
         <!-- utility -->
 
         <!-- log -->
@@ -217,10 +227,11 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
+        <!-- 不需要 slf4j-log4j12 -->
+        <!--<dependency>-->
+            <!--<groupId>org.slf4j</groupId>-->
+            <!--<artifactId>slf4j-log4j12</artifactId>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
@@ -345,6 +356,14 @@
                     <exclusion>
                         <groupId>org.springframework</groupId>
                         <artifactId>spring-context-support</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-beans</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-core</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -827,7 +846,7 @@
             <dependency>
                 <groupId>me.junbin.commons</groupId>
                 <artifactId>commons-utility</artifactId>
-                <version>1.0</version>
+                <version>${me.commons.version}</version>
             </dependency>
             <!-- 控制台彩色字体 -->
             <dependency>
@@ -846,6 +865,12 @@
                 <groupId>com.itextpdf</groupId>
                 <artifactId>itextpdf</artifactId>
                 <version>5.5.9</version>
+            </dependency>
+            <!-- 反射处理封装类 -->
+            <dependency>
+                <groupId>org.jooq</groupId>
+                <artifactId>joor</artifactId>
+                <version>${joor.version}</version>
             </dependency>
             <!-- utility -->
 

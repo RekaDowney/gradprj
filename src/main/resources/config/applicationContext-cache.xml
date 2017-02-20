@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/cache
+       http://www.springframework.org/schema/cache/spring-cache.xsd
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <!--<context:component-scan base-package="me.junbin.gradprj.service"/>-->
+
+    <cache:annotation-driven mode="proxy" proxy-target-class="false" cache-manager="cacheManager" order="2"/>
+
+    <context:property-placeholder file-encoding="UTF-8" location="classpath:bundle/db.properties"/>
+
+    <bean
+            id="jedisPoolConfig"
+            class="redis.clients.jedis.JedisPoolConfig"
+            p:testOnBorrow="${redis.testOnBorrow}"
+            p:testWhileIdle="${redis.testWhileIdle}"
+            p:minIdle="${redis.minIdle}"
+            p:maxTotal="${redis.maxTotal}"
+    />
+
+    <bean
+            id="jedisConnectionFactory"
+            class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
+            p:hostName="${redis.host}"
+            p:port="${redis.port}"
+            p:timeout="${redis.timeout}"
+            p:poolConfig-ref="jedisPoolConfig"
+    />
+
+    <bean
+            id="keySerializer"
+            class="org.springframework.data.redis.serializer.StringRedisSerializer"
+    />
+
+    <bean
+            id="valueSerializer"
+            class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer"
+    />
+
+    <bean
+            id="redisTemplate"
+            class="org.springframework.data.redis.core.RedisTemplate"
+            p:connectionFactory-ref="jedisConnectionFactory"
+            p:keySerializer-ref="keySerializer"
+            p:valueSerializer-ref="valueSerializer"
+            p:enableTransactionSupport="true"
+    />
+
+    <util:set id="cacheNames" set-class="java.util.HashSet" value-type="java.lang.String">
+        <value>accountCache</value>
+        <value>userCache</value>
+        <value>photoCache</value>
+        <value>roleCache</value>
+        <value>permCache</value>
+    </util:set>
+
+    <util:map id="cacheExpiredTimeMap"
+              map-class="java.util.HashMap"
+              key-type="java.lang.String"
+              value-type="java.lang.Long">
+        <!-- 设置 accountCache 的缓存过期时间为 1 小时 -->
+        <entry key="accountCache" value="3600"/>
+        <!-- 设置 userCache 的缓存过期时间为 12 小时 -->
+        <entry key="userCache" value="43200"/>
+        <!-- 设置 photoCache 的缓存过期时间为 24 小时 -->
+        <entry key="photoCache" value="86400"/>
+        <!-- 设置 roleCache 的缓存过期时间为 24 小时 -->
+        <entry key="roleCache" value="86400"/>
+        <!-- 设置 permCache 的缓存过期时间为 24 小时 -->
+        <entry key="permCache" value="86400"/>
+    </util:map>
+
+    <!-- defaultExpiration 指定所有 cache 的默认过期时间，单位：秒 -->
+    <!-- 这里指定过期时间为 3 小时 -->
+    <!-- expires 指定每个 cache 容器的过期时间，单位：秒。Map 的 Key 为缓存名称，Value 为该缓存的缓存数据的过期时间 -->
+    <bean
+            id="cacheManager"
+            class="org.springframework.data.redis.cache.RedisCacheManager"
+            c:redisOperations-ref="redisTemplate"
+            p:cacheNames-ref="cacheNames"
+            p:transactionAware="true"
+            p:defaultExpiration="10800"
+            p:usePrefix="false"
+            p:expires-ref="cacheExpiredTimeMap"
+    />
+
+</beans>

@@ -51,7 +51,7 @@
             p:dataSource-ref="dataSource"
             p:mapperLocations="classpath:mapper/*-mapper.xml"
             p:typeAliasesPackage="me.junbin.gradprj.domain"
-            p:typeHandlersPackage="me.junbin.gradprj.type.handler,me.junbin.commons.converter.mybatis"
+            p:typeHandlersPackage="me.junbin.gradprj.converter,me.junbin.commons.converter.mybatis"
             p:configuration-ref="configuration"
     />
 
@@ -60,7 +60,7 @@
             id="mapperScannerConfigurer"
             class="org.mybatis.spring.mapper.MapperScannerConfigurer"
             p:basePackage="me.junbin.gradprj.repository"
-            p:annotationClass="me.junbin.gradprj."
+            p:annotationClass="me.junbin.gradprj.annotation.MyBatisMapper"
             p:sqlSessionFactoryBeanName="sqlSessionFactory"
     />
 
@@ -72,7 +72,7 @@
     />
 
     <!-- 启动注解式事务支持 -->
-    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="false"/>
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="false" order="2"/>
 
     <!-- 不使用 CGLib，支持同类中的事务调用 -->
     <aop:config proxy-target-class="false" expose-proxy="true"/>

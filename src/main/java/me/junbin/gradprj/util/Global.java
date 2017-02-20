@@ -30,17 +30,17 @@ public enum Global {
         }
     }
 
-    public static final String DOC_URL;
+    public static final String DOC_PREFIX_URL;
     public static final String DOC_LOCATION;
-    public static final String IMAGE_URL;
+    public static final String IMAGE_PREFIX_URL;
     public static final String IMAGE_LOCATION;
     public static final String KAPTCHA_SESSION_KEY;
     public static final String LOGIN_ACCOUNT_KEY = "login_account";
     public static final String COOKIE_NAME = "shiroCookie";
 
     static {
-        DOC_URL = kvTranslator.getAsString("doc.mapping.url");
-        IMAGE_URL = kvTranslator.getAsString("image.mapping.url");
+        DOC_PREFIX_URL = kvTranslator.getAsString("doc.mapping.url");
+        IMAGE_PREFIX_URL = kvTranslator.getAsString("image.mapping.url");
         KAPTCHA_SESSION_KEY = kvTranslator.getAsString("kaptcha.session.key");
         if (SystemUtils.IS_OS_WINDOWS) {
             DOC_LOCATION = kvTranslator.getAsString("windows.doc.mapping.location");
@@ -65,16 +65,16 @@ public enum Global {
         return Paths.get(filePath).normalize().toString().replaceAll("\\\\+", "/");
     }
 
-    public static String imageUrl() {
-        return IMAGE_URL;
+    public static String imagePrefixUrl() {
+        return IMAGE_PREFIX_URL;
     }
 
     public static String imageLocation() {
         return IMAGE_LOCATION;
     }
 
-    public static String docUrl() {
-        return DOC_URL;
+    public static String docPrefixUrl() {
+        return DOC_PREFIX_URL;
     }
 
     public static String docLocation() {

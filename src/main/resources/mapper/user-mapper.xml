@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="me.junbin.gradprj.repository.UserRepo">
+
+    <update id="update" parameterType="User">
+        UPDATE user
+        <set>
+            <if test="email != null and email != ''">
+                email = #{email},
+            </if>
+            <if test="username != null and username != ''">
+                username = #{username},
+            </if>
+            <if test="nickname != null and nickname != ''">
+                nickname = #{nickname},
+            </if>
+            <if test="qq != null and qq != ''">
+                qq = #{qq},
+            </if>
+            <if test="wx != null and wx != ''">
+                wx = #{wx}
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePortrait">
+        UPDATE user
+        SET portrait = #{photoId}
+        WHERE id = #{userId}
+    </update>
+
+    <sql id="userColumns">
+        ${user}.id u_id,
+        ${user}.email u_email,
+        ${user}.username u_username,
+        ${user}.nickname u_nickname,
+        ${user}.qq u_qq,
+        ${user}.wx u_wx,
+        ${user}.portrait u_portrait
+    </sql>
+
+    <select id="selectById" parameterType="String" resultMap="userPhotoMap">
+        SELECT
+        <include refid="userColumns">
+            <property name="user" value="u"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.PhotoRepo.photoColumns">
+            <property name="photo" value="p"/>
+        </include>
+        FROM user u LEFT JOIN photo p ON (u.portrait = p.id)
+        WHERE u.id = #{id}
+    </select>
+
+    <select id="selectAll" resultMap="userPhotoMap">
+        SELECT
+        <include refid="userColumns">
+            <property name="user" value="u"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.PhotoRepo.photoColumns">
+            <property name="photo" value="p"/>
+        </include>
+        FROM user u LEFT JOIN photo p ON (u.portrait = p.id)
+    </select>
+
+    <resultMap id="userPhotoMap" type="User">
+        <id property="id" column="u_id"/>
+        <result property="email" column="u_email"/>
+        <result property="username" column="u_username"/>
+        <result property="nickname" column="u_nickname"/>
+        <result property="qq" column="u_qq"/>
+        <result property="wx" column="u_wx"/>
+        <association
+                property="portrait"
+                javaType="Photo"
+                resultMap="me.junbin.gradprj.repository.PhotoRepo.photoMap"
+        />
+    </resultMap>
+
+    <resultMap id="userMap" type="User">
+        <id property="id" column="u_id"/>
+        <result property="email" column="u_email"/>
+        <result property="username" column="u_username"/>
+        <result property="nickname" column="u_nickname"/>
+        <result property="qq" column="u_qq"/>
+        <result property="wx" column="u_wx"/>
+    </resultMap>
+
+</mapper>

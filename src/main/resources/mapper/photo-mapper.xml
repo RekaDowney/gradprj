@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="me.junbin.gradprj.repository.PhotoRepo">
+
+    <insert id="insert" parameterType="Photo">
+        INSERT INTO photo (id, photo_name, path, created_time, valid)
+        VALUES (#{id}, #{photoName}, #{path}, #{createdTime}, #{valid})
+    </insert>
+
+    <insert id="batchInsert" parameterType="Photo">
+        INSERT INTO photo (id, photo_name, path, created_time, valid) VALUES
+        <foreach collection="domainList" separator="," item="photo">
+            (#{photo.id}, #{photo.photoName}, #{photo.path}, #{photo.createdTime}, #{photo.valid})
+        </foreach>
+    </insert>
+
+    <delete id="delete" parameterType="String">
+        UPDATE photo
+        SET valid = FALSE
+        WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="Photo">
+        UPDATE photo
+        <set>
+            <if test="photoName != null and photoName != ''">
+                photo_name = #{photoName},
+            </if>
+            <if test="path != null and path != ''">
+                path = #{path},
+            </if>
+            <if test="createdTime != null">
+                created_time = #{createdTime}
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <sql id="photoColumns">
+        ${photo}.id p_id,
+        ${photo}.photo_name p_photoName,
+        ${photo}.path p_path,
+        ${photo}.created_time p_createdTime,
+        ${photo}.valid p_valid
+    </sql>
+
+    <select id="selectById" parameterType="String" resultType="Photo">
+        SELECT *
+        FROM photo
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="Photo">
+        SELECT *
+        FROM photo
+    </select>
+
+    <resultMap id="photoMap" type="Photo">
+        <id property="id" column="p_id"/>
+        <result property="photoName" column="p_photoName"/>
+        <result property="path" column="p_path"/>
+        <result property="createdTime" column="p_createdTime"/>
+        <result property="valid" column="p_valid"/>
+    </resultMap>
+
+</mapper>

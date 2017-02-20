@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <!--
+        <bean
+                id="sessionIdGenerator"
+                class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"
+        />
+
+        <bean
+                id="sessionDAO"
+                class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO"
+                p:sessionIdGenerator-ref="sessionIdGenerator"
+        />
+
+        <bean
+                id="sessionManager"
+                class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager"
+                p:deleteInvalidSessions="true"
+                p:globalSessionTimeout="1800000"
+                p:sessionDAO-ref="sessionDAO"
+                p:sessionValidationSchedulerEnabled="true"
+                p:sessionValidationScheduler-ref="sessionValidationScheduler"
+                p:sessionIdCookieEnabled="true"
+                p:sessionIdCookie-ref="sessionIdCookie"
+        />
+    -->
+
+    <bean
+            id="sessionIdCookie"
+            class="org.apache.shiro.web.servlet.SimpleCookie"
+            p:name="shiroCookie"
+            p:httpOnly="true"
+            p:maxAge="1800000"
+    />
+
+    <bean
+            id="sessionManager"
+            class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager"
+            p:deleteInvalidSessions="true"
+            p:globalSessionTimeout="1800000"
+            p:sessionValidationSchedulerEnabled="true"
+            p:sessionValidationScheduler-ref="sessionValidationScheduler"
+            p:sessionIdCookieEnabled="true"
+            p:sessionIdCookie-ref="sessionIdCookie"
+    />
+
+    <bean
+            id="sessionValidationScheduler"
+            class="org.apache.shiro.session.mgt.quartz.QuartzSessionValidationScheduler"
+            p:sessionValidationInterval="1800000"
+            p:sessionManager-ref="sessionManager"
+    />
+
+    <bean
+            id="securityManager"
+            class="org.apache.shiro.web.mgt.DefaultWebSecurityManager"
+            p:realm-ref="customRealm"
+            p:sessionManager-ref="sessionManager"
+    />
+
+    <bean
+            class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+            p:staticMethod="org.apache.shiro.SecurityUtils.setSecurityManager"
+            p:arguments-ref="securityManager"
+    />
+
+    <bean
+            id="lifecycleBeanPostProcessor"
+            class="org.apache.shiro.spring.LifecycleBeanPostProcessor"
+    />
+
+    <bean
+            id="shiroFilter"
+            class="org.apache.shiro.spring.web.ShiroFilterFactoryBean"
+            p:securityManager-ref="securityManager"
+            p:loginUrl="/login"
+            p:unauthorizedUrl="/unauthorized"
+            p:filterChainDefinitionMap-ref="filterChainMap"
+    />
+
+    <util:map id="filterChainMap" map-class="java.util.HashMap" key-type="java.lang.String"
+              value-type="java.lang.String">
+        <entry key="/user/**" value="perms"/>
+    </util:map>
+
+    <!-- 支持 Service(和 Dao) 层的权限注解 -->
+    <bean
+            id="serviceAdvisorAutoProxyCreator"
+            class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+            depends-on="lifecycleBeanPostProcessor"
+            p:exposeProxy="true"
+            p:proxyTargetClass="false"
+    />
+
+    <bean
+            id="serviceAdvisor"
+            class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor"
+            p:securityManager-ref="securityManager"
+    />
+
+</beans>

@@ -15,6 +15,7 @@ import java.util.Objects;
 public class Role extends DetailDomain {
 
     private String roleName;
+    private String roleNameCn;
     private String remarks;
     private boolean active = true;
     // 只需要存储权限的 ID 列表即可，不需要存储权限，当页面需要展示时可以通过其他方法进行加载
@@ -32,6 +33,12 @@ public class Role extends DetailDomain {
         this.remarks = remarks;
     }
 
+    public Role(String roleName, String roleNameCn, String remarks) {
+        this.roleName = roleName;
+        this.roleNameCn = roleNameCn;
+        this.remarks = remarks;
+    }
+
     @Override
     public String toString() {
         return Gsonor.SIMPLE.toJson(this);
@@ -43,7 +50,10 @@ public class Role extends DetailDomain {
         if (object == null || getClass() != object.getClass()) return false;
         Role role = (Role) object;
         return active == role.active &&
+                valid == role.valid &&
+                Objects.equals(id, role.id) &&
                 Objects.equals(roleName, role.roleName) &&
+                Objects.equals(roleNameCn, role.roleNameCn) &&
                 Objects.equals(creator, role.creator) &&
                 Objects.equals(createdTime, role.createdTime) &&
                 Objects.equals(modifier, role.modifier) &&
@@ -53,7 +63,7 @@ public class Role extends DetailDomain {
 
     @Override
     public int hashCode() {
-        return Objects.hash(roleName, remarks, active);
+        return Objects.hash(id, roleName, roleNameCn, remarks, creator, createdTime, modifier, modifiedTime, active, valid);
     }
 
     public String getRoleName() {
@@ -62,6 +72,14 @@ public class Role extends DetailDomain {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+    }
+
+    public String getRoleNameCn() {
+        return roleNameCn;
+    }
+
+    public void setRoleNameCn(String roleNameCn) {
+        this.roleNameCn = roleNameCn;
     }
 
     public String getRemarks() {

@@ -13,9 +13,11 @@ import java.time.LocalDateTime;
  */
 public class DetailDomain extends BaseDomain implements Serializable {
 
-    protected Account creator;
+    // 仅存储 Account 的 ID
+    protected String creator;
     protected LocalDateTime createdTime;
-    protected Account modifier;
+    // 仅存储 Account 的 ID
+    protected String modifier;
     protected LocalDateTime modifiedTime;
 
     public DetailDomain() {
@@ -26,11 +28,11 @@ public class DetailDomain extends BaseDomain implements Serializable {
         return Gsonor.SIMPLE.toJson(this);
     }
 
-    public Account getCreator() {
+    public String getCreator() {
         return creator;
     }
 
-    public void setCreator(Account creator) {
+    public void setCreator(String creator) {
         this.creator = creator;
     }
 
@@ -42,11 +44,11 @@ public class DetailDomain extends BaseDomain implements Serializable {
         this.createdTime = createdTime;
     }
 
-    public Account getModifier() {
+    public String getModifier() {
         return modifier;
     }
 
-    public void setModifier(Account modifier) {
+    public void setModifier(String modifier) {
         this.modifier = modifier;
     }
 

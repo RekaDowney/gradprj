@@ -18,6 +18,8 @@ public class Account extends BaseDomain {
     private String principal;
     private String password;
     private LocalDateTime createdTime;
+    private String modifier;
+    private LocalDateTime modifiedTime;
     private boolean locked = false;
     private User user;
     // 一条关联查询语句可以解决
@@ -45,22 +47,23 @@ public class Account extends BaseDomain {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        Account account = (Account) object;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
         return locked == account.locked &&
                 valid == account.valid &&
                 Objects.equals(id, account.id) &&
                 Objects.equals(principal, account.principal) &&
                 Objects.equals(password, account.password) &&
                 Objects.equals(createdTime, account.createdTime) &&
-                Objects.equals(user, account.user);
+                Objects.equals(modifier, account.modifier) &&
+                Objects.equals(modifiedTime, account.modifiedTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, principal, password, createdTime, locked, valid, user);
+        return Objects.hash(id, principal, password, createdTime, modifier, modifiedTime, locked, valid);
     }
 
     public String getPrincipal() {
@@ -85,6 +88,22 @@ public class Account extends BaseDomain {
 
     public void setCreatedTime(LocalDateTime createdTime) {
         this.createdTime = createdTime;
+    }
+
+    public String getModifier() {
+        return modifier;
+    }
+
+    public void setModifier(String modifier) {
+        this.modifier = modifier;
+    }
+
+    public LocalDateTime getModifiedTime() {
+        return modifiedTime;
+    }
+
+    public void setModifiedTime(LocalDateTime modifiedTime) {
+        this.modifiedTime = modifiedTime;
     }
 
     public boolean isLocked() {

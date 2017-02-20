@@ -19,30 +19,23 @@ public class Perm extends DetailDomain implements Relation<Perm, String> {
     private String permUrl;
     private String permPattern;
     private PermType permType;
-    private int weight;
-    private boolean active;
+    private int weight = 1000;
+    private boolean active = true;
     // 这里只存储上级权限的 ID，他们之间的关联关系通过
     private String parentId;
 
     public Perm() {
     }
 
-    public Perm(String permName, String permUrl) {
+    public Perm(String id, String permName) {
+        this.id = id;
         this.permName = permName;
-        this.permUrl = permUrl;
     }
 
-    public Perm(String permName, String permUrl, String permPattern) {
+    public Perm(String id, String permName, String parentId) {
+        this.id = id;
         this.permName = permName;
-        this.permUrl = permUrl;
-        this.permPattern = permPattern;
-    }
-
-    public Perm(String permName, String permUrl, String permPattern, PermType permType) {
-        this.permName = permName;
-        this.permUrl = permUrl;
-        this.permPattern = permPattern;
-        this.permType = permType;
+        this.parentId = parentId;
     }
 
     @Override
@@ -127,13 +120,22 @@ public class Perm extends DetailDomain implements Relation<Perm, String> {
         this.parentId = parentId;
     }
 
+    /**
+     * @deprecated 不存储子级关系
+     */
     @Override
+    @Deprecated
     public List<Perm> getSub() {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
+    /**
+     * @deprecated 不存储子级关系
+     */
     @Override
+    @Deprecated
     public void setSub(List<Perm> subRelations) {
+        throw new UnsupportedOperationException();
     }
 
 }

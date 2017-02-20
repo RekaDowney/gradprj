@@ -1,6 +1,8 @@
 package me.junbin.gradprj.domain;
 
-import me.junbin.commons.gson.Gsonor;
+import me.junbin.gradprj.enumeration.MyGsonor;
+
+import java.io.Serializable;
 
 /**
  * @author : Zhong Junbin
@@ -8,7 +10,7 @@ import me.junbin.commons.gson.Gsonor;
  * @createDate : 2017/2/2 10:45
  * @description :
  */
-public class BaseDomain {
+public class BaseDomain implements Serializable {
 
     protected String id;
     protected boolean valid = true;
@@ -18,7 +20,7 @@ public class BaseDomain {
 
     @Override
     public String toString() {
-        return Gsonor.SIMPLE.toJson(this);
+        return MyGsonor.SIMPLE.toJson(this);
     }
 
     public String getId() {

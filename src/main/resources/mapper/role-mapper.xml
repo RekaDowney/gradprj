@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="me.junbin.gradprj.repository.RoleRepo">
+
+    <insert id="insert" parameterType="Role">
+        INSERT INTO role (id, role_name, role_name_cn, remarks, creator, created_time,
+                          modifier, modified_time, active, valid)
+        VALUES (#{id}, #{roleName}, #{roleNameCn}, #{remarks}, #{creator}, #{createdTime},
+                #{modifier}, #{modifiedTime}, #{active}, #{valid})
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO role (id, role_name, role_name_cn, remarks, creator, created_time,
+        modifier, modified_time, active, valid)
+        VALUES
+        <foreach collection="domainList" item="role" separator=",">
+            (#{role.id}, #{role.roleName}, #{role.roleNameCn}, #{role.remarks},
+            #{role.creator}, #{role.createdTime}, #{role.modifier},
+            #{role.modifiedTime}, #{role.active}, #{role.valid})
+        </foreach>
+    </insert>
+
+    <delete id="delete" parameterType="String">
+        UPDATE role
+        SET valid = FALSE
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteRole">
+        UPDATE role
+        SET valid = FALSE, modifier = #{modifier}, modified_time = #{modifiedTime}
+        WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="Role">
+        UPDATE role
+        <set>
+            <if test="roleName != null and roleName != ''">
+                role_name = #{roleName},
+            </if>
+            <if test="roleNameCn != null and roleNameCn != ''">
+                role_name_cn = #{roleNameCn},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                remarks = #{remarks},
+            </if>
+            <if test="modifier != null and modifier != ''">
+                modifier = #{modifier},
+            </if>
+            <if test="modifiedTime != null">
+                modified_time = #{modifiedTime}
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="activate">
+        UPDATE role
+        SET active = TRUE, modifier = #{modifier}, modified_time = #{modifiedTime}
+        WHERE id = #{id}
+    </update>
+
+    <update id="inactivate">
+        UPDATE role
+        SET active = FALSE, modifier = #{modifier}, modified_time = #{modifiedTime}
+        WHERE id = #{id}
+    </update>
+
+    <!--
+        由于 more 永远非 null，因此这里直接使用了 foreach，
+        在 foreach 中，一旦发现 more 存在成员，则添加前缀 , 来分隔前面插入的记录
+     -->
+    <insert id="grantPerm">
+        INSERT INTO role_perm (role_id, perm_id) VALUES
+        (#{roleId}, #{first})
+        <foreach collection="more" separator="," item="perm" open=",">
+            (#{roleId}, #{perm})
+        </foreach>
+    </insert>
+
+    <update id="grantPermList">
+        INSERT INTO role_perm (role_id, perm_id) VALUES
+        <foreach collection="permIdList" item="perm" separator=",">
+            (#{roleId}, #{perm})
+        </foreach>
+    </update>
+
+    <!--
+        由于 more 永远非 null，因此这里直接使用了 foreach，
+        在 foreach 中，一旦发现 more 存在成员，则添加前缀 , 来分隔前面的权限 ID
+     -->
+    <update id="revokePerm">
+        DELETE FROM role_perm
+        WHERE role_id = #{roleId} AND
+        perm_id IN (
+        #{first}
+        <foreach collection="more" item="perm" separator="," open=",">
+            #{perm}
+        </foreach>
+        )
+    </update>
+
+    <update id="revokeAllPerms">
+        DELETE FROM role_perm
+        WHERE role_id = #{roleId}
+    </update>
+
+    <update id="revokeAllAssociateAccount">
+        DELETE FROM account_role
+        WHERE role_id = #{roleId}
+    </update>
+
+    <sql id="roleColumns">
+        ${role}.id r_id,
+        ${role}.role_name r_roleName,
+        ${role}.role_name_cn r_roleNameCn,
+        ${role}.remarks r_remarks,
+        ${role}.creator r_creator,
+        ${role}.created_time r_createdTime,
+        ${role}.modifier r_modifier,
+        ${role}.modified_time r_modifiedTime,
+        ${role}.active r_active,
+        ${role}.valid r_valid
+    </sql>
+
+    <select id="selectById" parameterType="String" resultMap="rolePermIdMap">
+        SELECT
+        <include refid="roleColumns">
+            <property name="role" value="r"/>
+        </include>
+        ,
+        rp.perm_id perm_id
+        FROM role r
+        LEFT JOIN role_perm rp ON (r.id = rp.role_id)
+        WHERE r.id = #{id}
+    </select>
+
+    <select id="selectByRoleName" parameterType="String" resultMap="rolePermIdMap">
+        SELECT
+        <include refid="roleColumns">
+            <property name="role" value="r"/>
+        </include>
+        ,
+        rp.perm_id perm_id
+        FROM role r
+        LEFT JOIN role_perm rp ON (r.id = rp.role_id)
+        WHERE r.role_name = #{roleName}
+    </select>
+
+    <select id="selectAll" resultMap="rolePermIdMap">
+        SELECT
+        <include refid="roleColumns">
+            <property name="role" value="r"/>
+        </include>
+        ,
+        rp.perm_id perm_id
+        FROM role r
+        LEFT JOIN role_perm rp ON (r.id = rp.role_id)
+    </select>
+
+    <resultMap id="roleMap" type="Role">
+        <id property="id" column="id"/>
+        <result property="roleName" column="r_roleName"/>
+        <result property="roleNameCn" column="r_roleNameCn"/>
+        <result property="remarks" column="r_remarks"/>
+        <result property="creator" column="r_creator"/>
+        <result property="createdTime" column="r_createdTime"/>
+        <result property="modifier" column="r_modifier"/>
+        <result property="modifiedTime" column="r_modifiedTime"/>
+        <result property="active" column="r_active"/>
+        <result property="valid" column="r_valid"/>
+    </resultMap>
+
+    <resultMap id="rolePermIdMap" type="Role">
+        <id property="id" column="r_id"/>
+        <result property="roleName" column="r_roleName"/>
+        <result property="roleNameCn" column="r_roleNameCn"/>
+        <result property="remarks" column="r_remarks"/>
+        <result property="creator" column="r_creator"/>
+        <result property="createdTime" column="r_createdTime"/>
+        <result property="modifier" column="r_modifier"/>
+        <result property="modifiedTime" column="r_modifiedTime"/>
+        <result property="active" column="r_active"/>
+        <result property="valid" column="r_valid"/>
+        <!-- 由于 permIdList 是一个纯字符串集合，因此 collection 的 result 只需要声明 column 即可，不需要添加 property 映射 -->
+        <collection property="permIdList" ofType="String" javaType="ArrayList">
+            <result column="perm_id"/>
+        </collection>
+    </resultMap>
+
+    <select id="isAssociateWithAccount" parameterType="String" resultType="Boolean">
+        SELECT COUNT(*)
+        FROM account_role
+        WHERE role_id = #{id}
+    </select>
+
+    <select id="isAssociateWithPerm" parameterType="String" resultType="Boolean">
+        SELECT count(*)
+        FROM role_perm
+        WHERE role_id = #{id}
+    </select>
+
+</mapper>

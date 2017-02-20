@@ -3,43 +3,188 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="me.junbin.gradprj.repository.AccountRepo">
 
-    <insert id="insert" parameterType="me.junbin.gradprj.web.domain.Account">
-        INSERT INTO accounts (id, principal, password, created_time, locked, valid)
-        VALUES (#{account.id}, #{account.principal},
-                #{account.password}, #{account.createdTime},
-                #{account.locked}, #{account.valid});
+    <insert id="insert" parameterType="Account">
+        INSERT INTO account (id, principal, password, created_time, locked, valid)
+        VALUES (#{id}, #{principal}, #{password},
+                #{createdTime}, #{locked}, #{valid})
     </insert>
 
-    <insert id="insertAll" parameterType="List">
-        INSERT INTO accounts (id, principal, password, created_time, locked, valid)
+    <insert id="batchInsert" parameterType="List">
+        INSERT INTO account (id, principal, password, created_time, locked, valid)
         VALUES
-        <foreach collection="list" separator="," index="index" item="account">
+        <foreach collection="domainList" separator="," index="index" item="account">
             (#{account.id}, #{account.principal}, #{account.password},
-            #{account.createdTime}, #{account.locked}, #{account.valid}))
+            #{account.createdTime}, #{account.locked}, #{account.valid})
         </foreach>
-        ;
     </insert>
 
     <delete id="delete" parameterType="String">
-        DELETE FROM accounts
-        WHERE id = #{id};
+        UPDATE account
+        SET valid = FALSE
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteAccount">
+        UPDATE account
+        SET valid = FALSE, modifier = #{modifier}, modified_time = #{modifiedTime}
+        WHERE id = #{id}
     </delete>
 
     <update id="update" parameterType="Account">
-        UPDATE accounts
-        SET password = #{account.password}
-        WHERE id = #{account.id} AND valid = 1;
+        UPDATE account
+        SET password      = #{password},
+            modifier      = #{modifier},
+            modified_time = #{modifiedTime}
+        WHERE id = #{id} AND locked = FALSE
     </update>
 
-    <select id="selectOne" parameterType="String">
-        SELECT *
-        FROM accounts
-        WHERE id = #{id};
+    <update id="lock">
+        UPDATE account
+        SET locked        = TRUE,
+            modifier      = #{modifier},
+            modified_time = #{modifiedTime}
+        WHERE id = #{id}
+    </update>
+
+    <update id="unlock">
+        UPDATE account
+        SET locked        = FALSE,
+            modifier      = #{modifier},
+            modified_time = #{modifiedTime}
+        WHERE id = #{id}
+    </update>
+
+    <update id="grantRole">
+        INSERT INTO account_role (account_id, role_id) VALUES
+        (#{accountId}, #{first})
+        <foreach collection="more" separator="," item="role" open=",">
+            (#{accountId}, #{role})
+        </foreach>
+    </update>
+
+    <update id="grantRoleList">
+        INSERT INTO account_role (account_id, role_id) VALUES
+        <foreach collection="roleIdList" item="role" separator=",">
+            (#{accountId}, #{role})
+        </foreach>
+    </update>
+
+    <update id="revokeRole">
+        DELETE FROM account_role
+        WHERE account_id = #{accountId} AND
+        role_id IN (
+        #{first}
+        <foreach collection="more" item="role" separator="," open=",">
+            #{role}
+        </foreach>
+        )
+    </update>
+
+    <update id="revokeAllRoles">
+        DELETE FROM account_role
+        WHERE account_id = #{accountId}
+    </update>
+
+    <sql id="accountColumns">
+        ${account}.id a_id,
+        ${account}.principal a_principal,
+        ${account}.password a_password,
+        ${account}.created_time a_createdTime,
+        ${account}.modifier a_modifier,
+        ${account}.modified_time a_modifiedTime,
+        ${account}.locked a_locked,
+        ${account}.valid a_valid
+    </sql>
+
+    <select id="selectById" parameterType="String" resultMap="accountUserPhotoMap">
+        SELECT
+        <include refid="accountColumns">
+            <property name="account" value="a"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.UserRepo.userColumns">
+            <property name="user" value="u"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.PhotoRepo.photoColumns">
+            <property name="photo" value="p"/>
+        </include>
+        FROM account a LEFT JOIN user u ON (a.id = u.id)
+        LEFT JOIN photo p ON(u.portrait = p.id)
+        WHERE a.id = #{id}
     </select>
 
-    <select id="selectAll" parameterType="String" resultType="Account">
-        SELECT *
-        FROM accounts;
+    <select id="selectByPrincipal" parameterType="String" resultMap="accountUserPhotoMap">
+        SELECT
+        <include refid="accountColumns">
+            <property name="account" value="a"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.UserRepo.userColumns">
+            <property name="user" value="u"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.PhotoRepo.photoColumns">
+            <property name="photo" value="p"/>
+        </include>
+        FROM account a LEFT JOIN user u ON (a.id = u.id)
+        LEFT JOIN photo p ON(u.portrait = p.id)
+        WHERE a.principal = #{principal}
     </select>
+
+    <select id="selectAll" parameterType="String" resultMap="accountUserMap">
+        SELECT
+        <include refid="accountColumns">
+            <property name="account" value="a"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.UserRepo.userColumns">
+            <property name="user" value="u"/>
+        </include>
+        FROM account a LEFT JOIN user u ON(a.id = u.id)
+    </select>
+
+    <select id="acquireRoles" resultMap="me.junbin.gradprj.repository.RoleRepo.rolePermIdMap">
+        SELECT
+        <include refid="me.junbin.gradprj.repository.RoleRepo.roleColumns">
+            <property name="role" value="r"/>
+        </include>
+        ,
+        rp.perm_id perm_id
+        FROM account_role ar
+        LEFT JOIN role r ON (ar.role_id = r.id)
+        LEFT JOIN role_perm rp ON (r.id = rp.role_id)
+        WHERE ar.account_id = #{accountId}
+    </select>
+
+    <resultMap id="accountUserPhotoMap" type="Account">
+        <id property="id" column="a_id"/>
+        <result property="principal" column="a_principal"/>
+        <result property="password" column="a_password"/>
+        <result property="createdTime" column="a_createdTime"/>
+        <result property="modifier" column="a_modifier"/>
+        <result property="modifiedTime" column="a_modifiedTime"/>
+        <result property="valid" column="a_valid"/>
+        <association
+                property="user"
+                javaType="User"
+                resultMap="me.junbin.gradprj.repository.UserRepo.userPhotoMap"
+        />
+    </resultMap>
+
+    <resultMap id="accountUserMap" type="Account">
+        <id property="id" column="a_id"/>
+        <result property="principal" column="a_principal"/>
+        <result property="password" column="a_password"/>
+        <result property="createdTime" column="a_createdTime"/>
+        <result property="modifier" column="a_modifier"/>
+        <result property="modifiedTime" column="a_modifiedTime"/>
+        <result property="valid" column="a_valid"/>
+        <association
+                property="user"
+                javaType="User"
+                resultMap="me.junbin.gradprj.repository.UserRepo.userMap"
+        />
+    </resultMap>
 
 </mapper>

@@ -20,22 +20,17 @@ public class Photo extends BaseDomain {
     public Photo() {
     }
 
-    public Photo(String path) {
+    public Photo(String id) {
+        this.id = id;
+    }
+
+    public Photo(String id, String path) {
+        this.id = id;
         this.path = path;
     }
 
-    public Photo(String photoName, String path) {
-        this.photoName = photoName;
-        this.path = path;
-    }
-
-    public Photo(String path, LocalDateTime createdTime) {
-        this.path = path;
-        this.createdTime = createdTime;
-    }
-
-    public Photo(String photoName, String path, LocalDateTime createdTime) {
-        this.photoName = photoName;
+    public Photo(String id, String path, LocalDateTime createdTime) {
+        this.id = id;
         this.path = path;
         this.createdTime = createdTime;
     }
