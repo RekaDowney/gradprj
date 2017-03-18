@@ -123,9 +123,11 @@ public class RoleServiceImpl implements RoleService {
         log.debug("准备使角色{}失活，失活操作发起人：{}", id, modifier);
         log.debug("移除角色{}关联的所有权限", id);
         roleRepo.revokeAllPerms(id);
+/*
         log.debug("移除角色{}关联的所有账户", id);
         roleRepo.detachAssociateAccount(id);
         log.debug("使角色{}失活", id);
+*/
         return roleRepo.inactivate(id, modifier, modifiedTime);
     }
 
@@ -201,7 +203,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Caching(put = {@CachePut(key = "#id")})
+    @Caching(put = {@CachePut(key = "#id")}, evict = {@CacheEvict(key = "'roleList'")})
     public Role forcedSelectById(String id) {
         Args.notNull(id);
         log.debug("强制刷新id为{}的角色信息", id);

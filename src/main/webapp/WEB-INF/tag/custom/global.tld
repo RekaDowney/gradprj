@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+        http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+        version="2.0">
+
+    <description>自定义全局函数</description>
+    <tlib-version>1.0</tlib-version>
+    <short-name>global</short-name>
+
+    <function>
+        <name>visitor</name>
+        <description>获取游客账户</description>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>me.junbin.gradprj.domain.Account getVisitorAccount()</function-signature>
+        <example>${global:visitor}</example>
+    </function>
+
+    <function>
+        <name>docPrefixUrl</name>
+        <description>获取文档虚拟目录的映射路径前缀</description>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String docPrefixUrl()</function-signature>
+        <example>${global:docPrefixUrl}</example>
+    </function>
+
+    <function>
+        <name>imagePrefixUrl</name>
+        <description>获取图片虚拟目录的映射路径前缀</description>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String imagePrefixUrl()</function-signature>
+        <example>${global:imagePrefixUrl}</example>
+    </function>
+
+    <function>
+        <name>error50xKey</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String error50xKey()</function-signature>
+    </function>
+
+    <function>
+        <name>error40xKey</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String error40xKey()</function-signature>
+    </function>
+
+    <function>
+        <name>toPath</name>
+        <description>将路径转成Path对象</description>
+        <function-class>java.nio.file.Paths</function-class>
+        <function-signature>java.nio.file.Path get(java.lang.String,java.lang.String...)</function-signature>
+        <example>${global:toPath}</example>
+    </function>
+
+    <function>
+        <name>slash</name>
+        <description>将Path对象的文件分隔符全部转成正斜杠</description>
+        <function-class>me.junbin.commons.util.PathUtils</function-class>
+        <function-signature>java.lang.String extensionName(java.nio.file.Path)</function-signature>
+        <example>${global:slash}</example>
+    </function>
+
+    <function>
+        <name>statusKey</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String getJsonStatusKey()</function-signature>
+    </function>
+
+    <function>
+        <name>statusOk</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String getStatusOk()</function-signature>
+    </function>
+
+    <function>
+        <name>statusError</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String getStatusError()</function-signature>
+    </function>
+
+    <function>
+        <name>successMsgKey</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String getJsonSuccessMsgKey()</function-signature>
+    </function>
+
+    <function>
+        <name>errorMsgKey</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String getJsonErrorMsgKey()</function-signature>
+    </function>
+
+    <function>
+        <name>format</name>
+        <function-class>me.junbin.commons.util.Jsr310Utils</function-class>
+        <function-signature>
+            java.lang.String format(java.time.temporal.TemporalAccessor, java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <name>parseDateTime</name>
+        <function-class>me.junbin.commons.util.Jsr310Utils</function-class>
+        <function-signature>
+            java.time.LocalDateTime parseDateTime(java.lang.String,java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <name>parseDate</name>
+        <function-class>me.junbin.commons.util.Jsr310Utils</function-class>
+        <function-signature>
+            java.time.LocalDateTime parseDateTime(java.lang.String,java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <name>parseTime</name>
+        <function-class>me.junbin.commons.util.Jsr310Utils</function-class>
+        <function-signature>
+            java.time.LocalTime parseTime(java.lang.String,java.lang.String)
+        </function-signature>
+    </function>
+
+    <function>
+        <name>oneHourAgo</name>
+        <function-class>me.junbin.gradprj.util.Jsr310UtilExt</function-class>
+        <function-signature>boolean oneHourAgo(java.time.LocalDateTime)</function-signature>
+    </function>
+
+    <function>
+        <name>oneDayAgo</name>
+        <function-class>me.junbin.gradprj.util.Jsr310UtilExt</function-class>
+        <function-signature>boolean oneDayAgo(java.time.LocalDateTime)</function-signature>
+    </function>
+
+</taglib>

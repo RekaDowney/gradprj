@@ -157,6 +157,7 @@
         rp.perm_id perm_id
         FROM role r
         LEFT JOIN role_perm rp ON (r.id = rp.role_id)
+        WHERE r.valid = TRUE
     </select>
 
     <resultMap id="roleMap" type="Role">

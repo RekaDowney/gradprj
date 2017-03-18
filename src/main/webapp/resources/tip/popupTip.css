@@ -1,0 +1,58 @@
+#container {
+    max-width: 900px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#dm-notify {
+    position: fixed;
+    bottom: 5px;
+    right: 5px;
+    margin-left: 5px;
+    z-index: 99;
+}
+
+.dm-notification {
+    text-align: right;
+    margin-top: 5px;
+    padding: 15px;
+    border: 1px solid #eed3d7;
+    border-radius: 4px;
+    float: right;
+    clear: right;
+}
+
+.dm-notify-danger {
+    color: #fff;
+    background-color: #c9302c;
+    border-color: #ac2925;
+}
+
+.dm-notify-warning {
+    color: #fff;
+    background-color: #ec971f;
+    border-color: #d58512;
+}
+
+.dm-notify-info {
+    color: #fff;
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}
+
+.dm-notify-success {
+    color: #fff;
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+
+.dm-notify-primary {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+}
+
+ul li:hover {
+    cursor: pointer;
+}

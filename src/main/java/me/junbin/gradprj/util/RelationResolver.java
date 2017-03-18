@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * @createDate : 2017/1/31 21:50
  * @description : 关系解析器
  */
-public class RelationResolver {
+public abstract class RelationResolver {
 
     public static <R extends Relation<R, ID>, ID extends Serializable> List<ID> idList(final Collection<R> relations) {
         Args.notNull(relations);
@@ -32,6 +32,24 @@ public class RelationResolver {
                            .parallel()
                            .map(Relation::getId)
                            .collect(Collectors.toList());
+    }
+
+    public static <R extends Relation<R, ID>, ID extends Serializable> List<R> findIn(final List<R> total, final List<ID> idList) {
+        Args.notNull(total);
+        Args.notNull(idList);
+        return total.stream()
+                    .parallel()
+                    .filter(r -> idList.contains(r.getId()))
+                    .collect(Collectors.toList());
+    }
+
+    public static <R extends Relation<R, ID>, ID extends Serializable> List<R> findIn(final List<R> total, final Set<ID> idList) {
+        Args.notNull(total);
+        Args.notNull(idList);
+        return total.stream()
+                    .parallel()
+                    .filter(r -> idList.contains(r.getId()))
+                    .collect(Collectors.toList());
     }
 
     /**
@@ -218,6 +236,28 @@ public class RelationResolver {
                            .filter(entry -> Objects.equals(current, entry.getValue()))
                            .map(Map.Entry::getKey)
                            .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    }
+
+    public static <R extends Relation<R, ID>, ID extends Serializable> List<R> relationalize(List<R> relations) {
+        Map<R, R> subParentMap = constructSubParentMap(relations);
+        List<R> finalParent = allFinalParent(subParentMap).stream()
+                                                          .sorted(Relation.WEIGHT_COMPARATOR)
+                                                          .collect(Collectors.toList());
+        for (R r : finalParent) {
+            dealSub(subParentMap, r);
+        }
+        return finalParent;
+    }
+
+    private static <R extends Relation<R, ID>, ID extends Serializable> void dealSub(Map<R, R> subParentMap, R current) {
+        List<R> sub;
+        sub = sub(subParentMap, current).stream()
+                                        .sorted(Relation.WEIGHT_COMPARATOR)
+                                        .collect(Collectors.toList());
+        for (R r : sub) {
+            dealSub(subParentMap, r);
+        }
+        current.setSub(sub);
     }
 
 }

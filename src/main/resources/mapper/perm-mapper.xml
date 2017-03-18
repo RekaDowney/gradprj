@@ -5,20 +5,20 @@
 
     <insert id="insert" parameterType="Perm">
         INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id,
-                          weight, creator, created_time, modifier, modified_time, active, valid)
+                          weight, creator, created_time, modifier, modified_time, attachable, active, valid)
         VALUES (#{id}, #{permName}, #{permUrl}, #{permPattern}, #{permType},
                        #{parentId}, #{weight}, #{creator}, #{createdTime},
-                       #{modifier}, #{modifiedTime}, #{active}, #{valid})
+                       #{modifier}, #{modifiedTime}, #{attachable}, #{active}, #{valid})
     </insert>
 
     <insert id="batchInsert">
         INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id,
-        weight, creator, created_time, modifier, modified_time, active, valid)
+        weight, creator, created_time, modifier, modified_time, attachable, active, valid)
         VALUES
         <foreach collection="domainList" separator="," item="perm">
             (#{perm.id}, #{perm.permName}, #{perm.permUrl}, #{perm.permPattern}, #{perm.permType},
             #{perm.parentId}, #{perm.weight}, #{perm.creator}, #{perm.createdTime},
-            #{perm.modifier}, #{perm.modifiedTime}, #{perm.active}, #{perm.valid})
+            #{perm.modifier}, #{perm.modifiedTime}, #{perm.attachable}, #{perm.active}, #{perm.valid})
         </foreach>
     </insert>
 
@@ -52,11 +52,14 @@
             <if test="weight != null and weight != ''">
                 weight = #{weight},
             </if>
-            <if test="modifier != null and modifier != ''">
+            <if test="modifier != null">
                 modifier = #{modifier},
             </if>
             <if test="modifiedTime != null">
                 modified_time = #{modifiedTime},
+            </if>
+            <if test="attachable != null">
+                attachable = #{attachable}
             </if>
         </set>
         WHERE id = #{id}
@@ -97,6 +100,7 @@
         ${perm}.created_time p_createdTime,
         ${perm}.modifier p_modifier,
         ${perm}.modified_time p_modifiedTime,
+        ${perm}.attachable p_attachable,
         ${perm}.active p_active,
         ${perm}.valid p_valid
     </sql>
@@ -114,7 +118,7 @@
         <include refid="permColumns">
             <property name="perm" value="p"/>
         </include>
-        FROM perm p AND p.valid = TRUE
+        FROM perm p WHERE p.valid = TRUE
     </select>
 
     <resultMap id="permMap" type="Perm">
@@ -129,6 +133,7 @@
         <result property="createdTime" column="p_createdTime"/>
         <result property="modifier" column="p_modifier"/>
         <result property="modifiedTime" column="p_modifiedTime"/>
+        <result property="attachable" column="p_attachable"/>
         <result property="active" column="p_active"/>
         <result property="valid" column="p_valid"/>
     </resultMap>

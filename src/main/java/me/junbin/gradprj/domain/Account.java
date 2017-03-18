@@ -1,6 +1,6 @@
 package me.junbin.gradprj.domain;
 
-import me.junbin.commons.gson.Gsonor;
+import me.junbin.gradprj.enumeration.MyGsonor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +26,7 @@ public class Account extends BaseDomain {
     private List<Role> roleList = new ArrayList<>();
     // 首先查询所有的权限，之后通过 roleList 和 RelationResolver 可以得到账户的权限列表
     private List<Perm> permList = new ArrayList<>();
+    private List<Perm> relationPermList = new ArrayList<>();
 
     public Account() {
     }
@@ -43,7 +44,7 @@ public class Account extends BaseDomain {
 
     @Override
     public String toString() {
-        return Gsonor.EXCLUDE_PWD_FIELD_SIMPLE.toJson(this);
+        return MyGsonor.EXCLUDE_PWD_FIELD_SIMPLE.toJson(this);
     }
 
     @Override
@@ -136,6 +137,14 @@ public class Account extends BaseDomain {
 
     public void setPermList(List<Perm> permList) {
         this.permList = permList;
+    }
+
+    public List<Perm> getRelationPermList() {
+        return relationPermList;
+    }
+
+    public void setRelationPermList(List<Perm> relationPermList) {
+        this.relationPermList = relationPermList;
     }
 
 }

@@ -16,7 +16,7 @@
 
 
     <context:annotation-config/>
-    <context:component-scan base-package="me.junbin.gradprj.repository,me.junbin.gradprj.service"/>
+    <context:component-scan base-package="me.junbin.gradprj.repository,me.junbin.gradprj.service,me.junbin.gradprj.listener"/>
 
     <context:property-placeholder file-encoding="UTF-8" location="classpath:bundle/db.properties"/>
 
@@ -68,6 +68,12 @@
     <bean
             id="transactionManager"
             class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+            p:dataSource-ref="dataSource"
+    />
+
+    <bean
+            id="jdbcTemplate"
+            class="org.springframework.jdbc.core.JdbcTemplate"
             p:dataSource-ref="dataSource"
     />
 

@@ -10,12 +10,13 @@
     <title>Name</title>
 </head>
 <body>
-${account.id}<br/>
-${account.principal}<br/>
-${account.password}<br/>
-${account.createdTime}<br/>
-${account.locked}<br/>
-${account.valid}<br/>
+${account}
+<%--${account.id}<br/>--%>
+<%--${account.principal}<br/>--%>
+<%--${account.password}<br/>--%>
+<%--${account.createdTime}<br/>--%>
+<%--${account.locked}<br/>--%>
+<%--${account.valid}<br/>--%>
 <script type="text/javascript">
 </script>
 </body>

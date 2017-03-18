@@ -22,7 +22,7 @@ public abstract class EncryptUtils {
     }
 
     /**
-     * @deprecated 不建议使用 Sha1 加密
+     * @deprecated 不建议使用 Sha1 加密，已被 Google 破解
      */
     public static String sha1Encrypt(final String text, final String salt) {
         Sha1Hash sha1Hash = new Sha1Hash(text);

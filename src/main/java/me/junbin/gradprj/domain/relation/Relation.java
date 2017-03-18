@@ -1,6 +1,7 @@
 package me.junbin.gradprj.domain.relation;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -27,8 +28,12 @@ public interface Relation
      */
     void setSub(List<R> subRelations);
 
+    int getWeight();
+
     boolean equals(Object o);
 
     int hashCode();
+
+    Comparator<Relation> WEIGHT_COMPARATOR = Comparator.comparing(Relation::getWeight);
 
 }

@@ -1,17 +1,30 @@
 package me.junbin.gradprj.web;
 
 import me.junbin.commons.util.Args;
+import me.junbin.gradprj.domain.Account;
+import me.junbin.gradprj.util.Global;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.context.ContextLoader;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpSession;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author : Zhong Junbin
@@ -19,7 +32,7 @@ import java.nio.file.Paths;
  * @createDate : 2017/1/31 18:36
  * @description : 这个类只能由 {@link Controller}
  * 或者 {@link ControllerAdvice} 注解标注
- * 的类可以集成并使用。这是因为内部的一些方法存在限制，只能在 Web 环境下生效。
+ * 的类可以继承并使用。这是因为内部的一些方法存在限制，只能在 Web 环境下生效。
  * 这些方法都是从 {@link me.junbin.commons.web.WebUtils} 中截取出来的，更多有用的方法可
  * 以直接调用 {@link me.junbin.commons.web.WebUtils}
  */
@@ -36,6 +49,68 @@ public abstract class BaseController {
             log.error("{} 没有标注 Controller 或者 ControllerAdvice 注解！无法确保在 Web 环境时不可以继承 BaseController。", this.getClass().getName());
             throw new RuntimeException("继承于 BaseController 的类必须被 Controller 或者 ControllerAdvice 注解标注");
         }
+    }
+
+    @ModelAttribute
+    public void populateAccountToModel(HttpSession session, Model model) {
+        Object object = session.getAttribute(Global.LOGIN_ACCOUNT_KEY);
+/*
+        if (object == null) { // 尚未登陆或者不想登陆（以游客身份登陆）
+            removeAllAttributes(session);
+            Account visitor = loginAsVisitor();
+            // 将值传入到 Session 中
+            session.setAttribute(Global.LOGIN_ACCOUNT_KEY, visitor);
+            object = visitor;
+        }
+*/
+        model.addAttribute(Global.LOGIN_ACCOUNT_KEY, object);
+    }
+
+    protected Account loginAsVisitor() {
+        Account visitor = Global.getVisitorAccount();
+        UsernamePasswordToken token =
+                new UsernamePasswordToken(visitor.getPrincipal(), visitor.getPassword());
+        Subject subject = SecurityUtils.getSubject();
+        subject.login(token); // 在这里该方法不可能抛出异常
+        return visitor;
+    }
+
+    protected HttpSession removeAllAttributes(HttpSession session) {
+        return removeAllBut(session, null);
+    }
+
+    protected HttpSession removeAllBut(HttpSession session, String notRemoveKey) {
+        Args.notNull(session);
+        Enumeration<String> attrNames = session.getAttributeNames();
+        String attrName;
+        while (attrNames.hasMoreElements()) {
+            attrName = attrNames.nextElement();
+            if (StringUtils.equals(attrName, notRemoveKey)) {
+                continue;
+            }
+            session.removeAttribute(attrName);
+        }
+        return session;
+    }
+
+    protected HttpSession removeAllBut(HttpSession session, String firstNotRemove, String... moreNotRemoves) {
+        Args.notNull(session);
+        Set<String> key = new HashSet<>(moreNotRemoves.length);
+        if (moreNotRemoves.length > 0) {
+            key.addAll(Arrays.asList(moreNotRemoves));
+        }
+        key.add(firstNotRemove);
+        key.remove(null);
+        Enumeration<String> attrNames = session.getAttributeNames();
+        String attrName;
+        while (attrNames.hasMoreElements()) {
+            attrName = attrNames.nextElement();
+            if (key.contains(attrName)) {
+                continue;
+            }
+            session.removeAttribute(attrName);
+        }
+        return session;
     }
 
     /**

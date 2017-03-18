@@ -4,6 +4,8 @@ package me.junbin.gradprj.domain;
 import me.junbin.gradprj.domain.relation.Relation;
 import me.junbin.gradprj.enumeration.PermType;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,9 +22,12 @@ public class Perm extends DetailDomain implements Relation<Perm, String> {
     private String permPattern;
     private PermType permType;
     private int weight = 1000;
+    private boolean attachable = false;
     private boolean active = true;
     // 这里只存储上级权限的 ID，他们之间的关联关系通过
     private String parentId;
+    private List<Perm> sub = new ArrayList<>();
+    public static final Comparator<Perm> COMPARE_BY_WEIGHT = Comparator.comparing(Perm::getWeight);
 
     public Perm() {
     }
@@ -46,6 +51,7 @@ public class Perm extends DetailDomain implements Relation<Perm, String> {
         return valid == perm.valid &&
                 weight == perm.weight &&
                 active == perm.active &&
+                attachable == perm.attachable &&
                 permType == perm.permType &&
                 Objects.equals(id, perm.id) &&
                 Objects.equals(permName, perm.permName) &&
@@ -60,7 +66,7 @@ public class Perm extends DetailDomain implements Relation<Perm, String> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, permName, permUrl, permPattern, permType, creator, createdTime, modifier, modifiedTime, weight, active, parentId, valid);
+        return Objects.hash(id, permName, permUrl, permPattern, permType, creator, createdTime, modifier, modifiedTime, weight, attachable, active, parentId, valid);
     }
 
     public String getPermName() {
@@ -95,6 +101,7 @@ public class Perm extends DetailDomain implements Relation<Perm, String> {
         this.permType = permType;
     }
 
+    @Override
     public int getWeight() {
         return weight;
     }
@@ -120,22 +127,22 @@ public class Perm extends DetailDomain implements Relation<Perm, String> {
         this.parentId = parentId;
     }
 
-    /**
-     * @deprecated 不存储子级关系
-     */
-    @Override
-    @Deprecated
-    public List<Perm> getSub() {
-        throw new UnsupportedOperationException();
+    public boolean isAttachable() {
+        return attachable;
     }
 
-    /**
-     * @deprecated 不存储子级关系
-     */
+    public void setAttachable(boolean attachable) {
+        this.attachable = attachable;
+    }
+
     @Override
-    @Deprecated
+    public List<Perm> getSub() {
+        return sub;
+    }
+
+    @Override
     public void setSub(List<Perm> subRelations) {
-        throw new UnsupportedOperationException();
+        this.sub = subRelations;
     }
 
 }

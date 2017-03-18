@@ -10,3 +10,79 @@ html, body {
     width: 100%;
     height: 100%;
 }
+
+/*
+.container {
+    height: 100%;
+    padding: 40px 0 0;
+    box-sizing: border-box;
+}
+
+.btnContainer {
+    height: 40px;
+    margin: -40px 0 0;
+}
+
+.officeContainer {
+    height: 100%;
+}
+*/
+
+/* 上面被注释掉的 CSS 实现与下面相同的效果 */
+
+.container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.btnContainer {
+    height: 40px;
+    /*background: #BBE8F2;*/
+}
+
+.officeContainer {
+    /*background: #D9C666;*/
+    width: 100%;
+    position: absolute;
+    top: 40px;
+    left: 0;
+    bottom: 0;
+}
+
+/* 标准容器 -- 页首 */
+.headerContainer {
+    width: 100%;
+    height: 40px;
+    top: 0;
+    left: 0;
+    position: absolute;
+    /*z-index: 100;*/
+}
+
+/* 标准容器 -- 页首 */
+
+/* 标准容器 -- 主体 */
+.mainContainer {
+    width: 100%;
+    position: absolute;
+    overflow: auto;
+    left: 0;
+    top: 40px;
+    bottom: 40px;
+    /*z-index: 90;*/
+}
+
+/* 标准容器 -- 主体 */
+
+/* 标准容器 -- 页尾 */
+.tailContainer {
+    width: 100%;
+    height: 40px;
+    left: 0;
+    bottom: 0;
+    position: absolute;
+    /*z-index: 100;*/
+}
+
+/* 标准容器 -- 页尾 */

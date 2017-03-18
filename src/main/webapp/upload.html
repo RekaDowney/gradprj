@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>上传</title>
+    <link type="text/css" rel="stylesheet" href="resources/css/common.css"/>
+    <script type="text/javascript" src="resources/js/jquery.js"></script>
+    <style type="text/css">
+        .fileTag {
+            padding: 4px 10px;
+            height: 20px;
+            line-height: 20px;
+            position: relative;
+            cursor: pointer;
+            color: #d01e99;
+            background: #e1ffcd;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            display: inline-block;
+            *display: inline;
+            *zoom: 1;
+        }
+
+        .fileTag input {
+            position: absolute;
+            font-size: 100px;
+            /* 必须将 top 和 right 都设置成 0，否则点击时无法打开文件选择框 */
+            top: 0;
+            right: 0;
+            opacity: 0;
+            filter: alpha(opacity=0);
+            cursor: pointer;
+        }
+
+        .fileTag :hover {
+            color: #444;
+            background: #eee;
+            border-color: #ccc;
+            text-decoration: none;
+        }
+
+        .filenameList {
+            top: 0;
+            right: 0;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+<hr/>
+
+<p>
+    <a class="fileTag">
+        选择文件上传
+        <!--<input type="file" name="file" multiple="multiple" accept="image/png,image/jpeg,image/gif"/>-->
+        <input type="file" name="file" multiple="multiple" accept="image/*"/>
+    </a>
+    <br/>
+    <span class="filenameList"></span>
+</p>
+<p>
+    <a class="fileTag">
+        选择文件上传
+        <input type="file" name="file" multiple="multiple"
+               accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                       application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+                       application/vnd.openxmlformats-officedocument.presentationml.presentation,
+                       image/*"/>
+    </a>
+    <br/>
+    <span class="filenameList"></span>
+</p>
+
+<script type="text/javascript">
+    $(function () {
+        var fileCache = [];
+        var fileTag = $(".fileTag");
+
+        fileTag.on("change", "input[type='file'][multiple!='multiple']", function () {
+            var filePath = $(this).val();
+            console.log(filePath);
+            if (filePath.indexOf("jpg") != -1 || filePath.indexOf("png") != -1) {
+                $(".errorTip").html("").hide();
+                var arr = filePath.split('\\');
+                var fileName = arr[arr.length - 1];
+                $(".showFileName").html(fileName);
+            } else {
+                $(".showFileName").html("");
+                $(".errorTip").html("您未上传文件，或者您上传文件类型有误！").show();
+                return false
+            }
+        }).on('change', "input[type='file'][multiple]", function () {
+            var files = $(this)[0].files; // files 属性为 HTML5，得到的是一个类似于 List 的对象，不是 Array
+            var arr = [];
+            var fileArr = [];
+            for (let i = 0, f; f = files[i]; i++) {
+                console.log({
+                    filename: f.name,
+                    fileSize: f.size + 'Byte',
+                    fileType: f.type,
+                    lastModifiedDate: f.lastModifiedDate
+                });
+//                console.log(JSON.stringify());
+                arr.push(f.name);
+                fileArr.push(f);
+            }
+            arr.push("--------------");
+
+            fileArr.sort(sortByFilename);
+            for (let i = 0, f; f = fileArr[i]; i++) {
+                arr.push(f.name);
+            }
+            $(this).parent().next().next('.filenameList').html('已选择：　' + arr.join("　｜　"));
+            /*
+             $(".showFileName").html("");
+             for (let i = 0, f; f = files[i]; i++) {
+             if (i === 0) {
+             $(".showFileName").append("<span>" + f.name + "</span>　　" + f.value);
+             } else {
+             $(".showFileName").append("<br/><span>" + f.name + "</span>　　" + f.value);
+             }
+             }
+             */
+        });
+
+        function sortByFilename(f1, f2) {
+            return f1.name.localeCompare(f2.name);
+        }
+
+        function alreadyInCache(file) {
+            for (var i = 0, f; f = fileCache[i]; i++) {
+                if (f.name === file.name) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
+</script>
+</body>
+</html>

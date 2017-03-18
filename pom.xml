@@ -71,14 +71,14 @@
         <tools.jar>${java.home}/../lib/tools.jar</tools.jar>
         <skip.module.test>true</skip.module.test>
         <!-- web config -->
-        <module.context.path>/gradprj</module.context.path>
+        <module.context.path>/</module.context.path>
         <module.port>80</module.port>
         <!-- 虚拟目录配置，仅使用 IDE 开发时需要用到 -->
         <image.mapping.url>/mapping/image</image.mapping.url>
-        <image.mapping.location>L:/gradprj/image</image.mapping.location>
+        <image.mapping.location>F:/gradprj/image</image.mapping.location>
         <!--<image.mapping.location>/usr/local/gradprj/image</image.mapping.location>-->
         <doc.mapping.url>/mapping/doc</doc.mapping.url>
-        <doc.mapping.location>L:/gradprj/doc</doc.mapping.location>
+        <doc.mapping.location>F:/gradprj/doc</doc.mapping.location>
         <!--<doc.mapping.location>/usr/local/gradprj/doc</doc.mapping.location>-->
         <me.commons.version>1.1</me.commons.version>
         <joor.version>0.9.6</joor.version>
@@ -183,10 +183,19 @@
         </dependency>
         <!-- shiro -->
 
+        <dependency>
+            <groupId>com.zhuozhengsoft.pageoffice</groupId>
+            <artifactId>pageoffice3</artifactId>
+        </dependency>
+
         <!-- utility -->
         <dependency>
             <groupId>me.junbin.commons</groupId>
             <artifactId>commons-utility</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>me.junbin.commons</groupId>
+            <artifactId>paging</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.code</groupId>
@@ -229,8 +238,8 @@
         </dependency>
         <!-- 不需要 slf4j-log4j12 -->
         <!--<dependency>-->
-            <!--<groupId>org.slf4j</groupId>-->
-            <!--<artifactId>slf4j-log4j12</artifactId>-->
+        <!--<groupId>org.slf4j</groupId>-->
+        <!--<artifactId>slf4j-log4j12</artifactId>-->
         <!--</dependency>-->
         <dependency>
             <groupId>commons-logging</groupId>
@@ -848,6 +857,11 @@
                 <artifactId>commons-utility</artifactId>
                 <version>${me.commons.version}</version>
             </dependency>
+            <dependency>
+                <groupId>me.junbin.commons</groupId>
+                <artifactId>paging</artifactId>
+                <version>1.0</version>
+            </dependency>
             <!-- 控制台彩色字体 -->
             <dependency>
                 <groupId>org.fusesource.jansi</groupId>
@@ -1297,12 +1311,19 @@
                     <contextHandlers>
                         <!-- 多个虚拟目录配置使用多个 contextHandler -->
                         <contextHandler implementation="org.eclipse.jetty.webapp.WebAppContext">
-                            <!-- contextPath 这里必须加上模块的 contextPath，否则虚拟目录的访问路径将不包含模块的 contextPath -->
-                            <contextPath>${module.context.path}${image.mapping.url}</contextPath>
+                            <!--
+                                注意：contextPath 这里必须加上模块的 contextPath，
+                                否则虚拟目录的访问路径将不包含模块的 contextPath；
+                                注意：另外如果 contextPath 为 / 则不可以再加上 contextPath，
+                                否则访问路径变成了 //
+                            -->
+                            <!--<contextPath>${module.context.path}${image.mapping.url}</contextPath>-->
+                            <contextPath>${image.mapping.url}</contextPath>
                             <resourceBase>${image.mapping.location}</resourceBase>
                         </contextHandler>
                         <contextHandler implementation="org.eclipse.jetty.webapp.WebAppContext">
-                            <contextPath>${module.context.path}${doc.mapping.url}</contextPath>
+                            <!--<contextPath>${module.context.path}${doc.mapping.url}</contextPath>-->
+                            <contextPath>${doc.mapping.url}</contextPath>
                             <resourceBase>${doc.mapping.location}</resourceBase>
                         </contextHandler>
                     </contextHandlers>

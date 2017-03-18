@@ -1,6 +1,5 @@
 package me.junbin.gradprj.enumeration;
 
-import me.junbin.commons.converter.custom.CustomEnum;
 import me.junbin.commons.util.Args;
 
 import java.util.NoSuchElementException;
@@ -11,7 +10,7 @@ import java.util.NoSuchElementException;
  * @createDate : 2017/1/31 19:46
  * @description :
  */
-public enum PermType implements CustomEnum<PermType> {
+public enum PermType implements CommonEnum<PermType> {
 
     /**
      * 菜单类权限分为 分类栏目下的 XX 学院，XX 专业，XX 年级；

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="me.junbin.gradprj.repository.DocumentRepo">
+
+    <insert id="insert" parameterType="Document">
+        INSERT INTO document (id, doc_url, doc_name, doc_type, category_id,
+                              creator, created_time, modifier, modified_time, valid)
+        VALUES (#{id}, #{docUrl}, #{docName}, #{docType}, #{categoryId}, #{creator},
+                #{createdTime}, #{modifier}, #{modifiedTime}, #{valid});
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO document (id, doc_url, doc_name, doc_type, category_id,
+        creator, created_time, modifier, modified_time, valid)
+        VALUES
+        <foreach collection="domainList" item="doc" separator=",">
+            (#{doc.id}, #{doc.docUrl}, #{doc.docName}, #{doc.docType},
+            #{doc.categoryId}, #{doc.creator}, #{doc.createdTime},
+            #{doc.modifier}, #{doc.modifiedTime}, #{doc.valid})
+        </foreach>
+    </insert>
+
+    <delete id="delete" parameterType="String">
+        UPDATE document
+        SET valid = FALSE
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteDoc">
+        UPDATE document
+        SET valid         = FALSE,
+            modifier      = #{modifier},
+            modified_time = #{modifiedTime}
+        WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="Document">
+        UPDATE document
+        SET modifier      = #{modifier},
+            modified_time = #{modifiedTime},
+            doc_name      = #{docName}
+        WHERE id = #{id}
+    </update>
+
+    <sql id="documentColumns">
+        ${doc}.id d_id,
+        ${doc}.doc_url d_docUrl,
+        ${doc}.doc_name d_docName,
+        ${doc}.doc_type d_docType,
+        ${doc}.category_id d_categoryId,
+        ${doc}.creator d_creator,
+        ${doc}.created_time d_createdTime,
+        ${doc}.modifier d_modifier,
+        ${doc}.modified_time d_modifiedTime,
+        ${doc}.valid d_valid
+    </sql>
+
+    <select id="selectById" parameterType="String" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document d
+        WHERE id = #{id} AND valid = TRUE
+    </select>
+
+    <select id="selectAll" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document d WHERE valid = TRUE ORDER BY d.created_time DESC
+    </select>
+
+    <select id="findIdIn" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document d WHERE valid = TRUE AND d.id IN
+        <foreach collection="idArr" item="docId" open="(" close=")" separator=",">
+            #{docId}
+        </foreach>
+    </select>
+
+    <select id="allLatest" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document_newest dn LEFT JOIN document d ON (dn.doc_id = d.id) ORDER BY dn.id DESC
+    </select>
+
+    <select id="totalLatest" resultType="long">
+        SELECT count(*)
+        FROM document_newest;
+    </select>
+
+    <select id="latest" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document_newest dn LEFT JOIN document d ON (dn.doc_id = d.id) ORDER BY dn.id DESC
+        LIMIT #{skip}, #{size};
+    </select>
+
+    <select id="underCategory" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document d WHERE valid = TRUE AND category_id = #{categoryId}
+    </select>
+
+    <select id="total" resultType="long">
+        SELECT count(*)
+        FROM document
+        WHERE valid = TRUE
+        <if test="docName != null and docName != ''">
+            AND doc_name LIKE #{docName}
+        </if>
+    </select>
+
+    <select id="page" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document d WHERE d.valid = TRUE
+        <if test="docName != null and docName != '%%'">
+            AND doc_name LIKE #{docName}
+        </if>
+        ORDER BY d.created_time DESC LIMIT #{skip}, #{pageSize}
+    </select>
+
+    <select id="totalWithCategory" resultType="long">
+        SELECT count(*)
+        FROM document
+        WHERE valid = TRUE AND category_id = #{categoryId}
+        <if test="docName != null and docName != '%%'">
+            AND doc_name LIKE #{docName}
+        </if>
+    </select>
+
+    <select id="pageWithCategory" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document d WHERE d.valid = TRUE
+        AND category_id = #{categoryId}
+        <if test="docName != null and docName != ''">
+            AND doc_name LIKE #{docName}
+        </if>
+        ORDER BY d.created_time DESC LIMIT #{skip}, #{pageSize}
+    </select>
+
+    <resultMap id="docMap" type="Document">
+        <id property="id" column="d_id"/>
+        <result property="docUrl" column="d_docUrl"/>
+        <result property="docName" column="d_docName"/>
+        <result property="docType" column="d_docType"/>
+        <result property="categoryId" column="d_categoryId"/>
+        <result property="creator" column="d_creator"/>
+        <result property="createdTime" column="d_createdTime"/>
+        <result property="modifier" column="d_modifier"/>
+        <result property="modifiedTime" column="d_modifiedTime"/>
+        <result property="valid" column="d_valid"/>
+    </resultMap>
+
+</mapper>

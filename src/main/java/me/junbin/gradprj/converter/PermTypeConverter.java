@@ -1,6 +1,6 @@
 package me.junbin.gradprj.converter;
 
-import me.junbin.commons.converter.custom.CustomEnumConverter;
+import me.junbin.gradprj.api.CommonEnumConverter;
 import me.junbin.gradprj.enumeration.PermType;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
@@ -14,7 +14,7 @@ import org.apache.ibatis.type.MappedTypes;
  */
 @MappedTypes(PermType.class)
 @MappedJdbcTypes(JdbcType.VARCHAR)
-public class PermTypeConverter extends CustomEnumConverter<PermType> {
+public class PermTypeConverter extends CommonEnumConverter<PermType> {
 
     public PermTypeConverter() {
         super(PermType.FUNCTION);
