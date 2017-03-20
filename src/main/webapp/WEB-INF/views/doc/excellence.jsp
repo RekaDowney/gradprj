@@ -1,21 +1,23 @@
 <%--
   Created by IntelliJ IDEA.
   User: Zhong Junbin
-  Date: 2017/2/25 13:26
+  Date: 2017/3/19 21:05
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" pageEncoding="UTF-8" %>
-<%--<%@taglib prefix="global" uri="/WEB-INF/tag/custom/global.tld" %>--%>
-<%--<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>--%>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>50X</title>
+    <meta charset="UTF-8">
+    <title>优质文档</title>
     <link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common.css"/>
+    <script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery.js"></script>
 </head>
 <body>
-系统发生异常，攻城狮正在努力修复！
-<div style="display: none;">
-    ${error_50x}
-</div>
+优质文档
+<script type="text/javascript">
+    $(function () {
+
+    });
+</script>
 </body>
 </html>

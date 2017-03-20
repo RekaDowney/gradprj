@@ -22,3 +22,6 @@
     }
 
 })(jQuery);
+
+// 每页默认显示记录条数
+var DEFAULT_PAGE_SIZE = 10;

@@ -6,6 +6,7 @@ import me.junbin.commons.util.PathUtils;
 import me.junbin.gradprj.domain.Account;
 import me.junbin.gradprj.domain.Perm;
 import me.junbin.gradprj.domain.Role;
+import me.junbin.gradprj.enumeration.PermType;
 import me.junbin.gradprj.service.AccountService;
 import me.junbin.gradprj.service.PermService;
 import org.apache.commons.lang3.SystemUtils;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author : Zhong Junbin
@@ -189,6 +191,11 @@ public enum Global {
             List<Perm> permList = RelationResolver.findIn(totalPerm, permIdSet);
             visitor.setPermList(permList);
             visitor.setRoleList(roleList);
+
+            List<Perm> menu = permList.stream().filter(p -> p.getPermType() == PermType.MENU)
+                                      .collect(Collectors.toList());
+            visitor.setRelationPermList(RelationResolver.relationalize(menu));
+
             VISITOR = visitor;
             AccountMgr.store(visitor);
         }

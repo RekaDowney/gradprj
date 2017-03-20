@@ -406,11 +406,12 @@ VALUES ('8a76458cbdf4416896e995aee25a6558', '请假', NULL, 'ask:for:leave', '�
 
 -- 菜单类
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
-VALUES ('fce10205237e4774840b171d44d3c416', '最新入库', NULL, 'channel:*:newest', '菜单类', NULL, 10,
+VALUES ('fce10205237e4774840b171d44d3c416', '最新入库', '/doc/fce10205237e4774840b171d44d3c416/latest', 'channel:*:newest',
+                                            '菜单类', NULL, 10,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
         TRUE);
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
-VALUES ('1d4b1455eef54443a01dd77468225f52', '分类文档', NULL, 'channel:*:category', '菜单类', NULL, 20,
+VALUES ('1d4b1455eef54443a01dd77468225f52', '分类文档', '/doc/page', 'channel:*:category', '菜单类', NULL, 20,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
         TRUE);
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
@@ -479,11 +480,11 @@ VALUES
                                        'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:20', FALSE, TRUE, TRUE);
 
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
-VALUES ('ce36470d5c6a49f48a3a29b6868ebb24', '优质文档', NULL, 'channel:*:excellence', '菜单类', NULL, 30,
+VALUES ('ce36470d5c6a49f48a3a29b6868ebb24', '优质文档', '/doc/excellence', 'channel:*:excellence', '菜单类', NULL, 30,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:20', FALSE, TRUE,
         TRUE);
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
-VALUES ('4173c83dae5e437b9aacb1b995dfe311', '关于本站', NULL, 'channel:*:aboutUs', '菜单类', NULL, 40,
+VALUES ('4173c83dae5e437b9aacb1b995dfe311', '关于本站', '/about', 'channel:*:aboutUs', '菜单类', NULL, 40,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:20', FALSE, TRUE,
         TRUE);
 -- 角色授权，目前四大类角色：游客，注册用户，管理员，主人

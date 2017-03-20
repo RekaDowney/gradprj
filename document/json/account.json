@@ -1,0 +1,28 @@
+[
+  {
+    "principal": "visitor",
+    "password": "cccd2e959c0a40369042ddd1c23e1c53",
+    "createdTime": "2017-02-20 21:37:21",
+    "locked": false,
+    "user": {
+      "id": "9cf78b0ed096438bbc0f45a7fc8cfd0c"
+    },
+    "roleList": [],
+    "permList": [],
+    "id": "9cf78b0ed096438bbc0f45a7fc8cfd0c",
+    "valid": true
+  },
+  {
+    "principal": "System",
+    "password": "e8fada2b3b4420040756385069c05943",
+    "createdTime": "2017-02-15 21:13:43",
+    "locked": false,
+    "user": {
+      "id": "d7ff797575604fd1b9960ab10c30d668"
+    },
+    "roleList": [],
+    "permList": [],
+    "id": "d7ff797575604fd1b9960ab10c30d668",
+    "valid": true
+  }
+]

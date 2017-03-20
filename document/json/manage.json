@@ -1,0 +1,38 @@
+[
+  {
+    "permName": "用户管理",
+    "permUrl": "/user/manage",
+    "permPattern": "manage:*:user",
+    "permType": "管理类",
+    "weight": 10,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:18",
+    "id": "829d8bd064a8422c8e84b1c695cd582f",
+    "valid": true
+  },
+  {
+    "permName": "角色管理",
+    "permUrl": "/role/manage",
+    "permPattern": "manage:*:role",
+    "permType": "管理类",
+    "weight": 20,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "421bd40c477e41edb4424e67628b88ff",
+    "valid": true
+  },
+  {
+    "permName": "权限管理",
+    "permUrl": "/perm/manage",
+    "permPattern": "manage:*:perm",
+    "permType": "管理类",
+    "weight": 30,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "4e2b2a20451747938cbb1af202be92ea",
+    "valid": true
+  }
+]

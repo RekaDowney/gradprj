@@ -1,0 +1,46 @@
+[
+  {
+    "roleName": "visitor",
+    "roleNameCn": "游客",
+    "remarks": "游客是一种通用的角色，拥有系统最基本的功能对应的权限",
+    "active": true,
+    "permIdList": [],
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-20 21:49:08",
+    "id": "b0b8a48302f44b68b613409c312a1f4e",
+    "valid": true
+  },
+  {
+    "roleName": "user",
+    "roleNameCn": "注册用户",
+    "remarks": "注册用户权限比游客要多一些，其可以通过登陆操作来获取更多系统功能",
+    "active": true,
+    "permIdList": [],
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-20 21:49:09",
+    "id": "85d4eb03bc3b407e93a447ee5e27d4c4",
+    "valid": true
+  },
+  {
+    "roleName": "admin",
+    "roleNameCn": "管理员",
+    "remarks": "管理员拥有系统大部分权限，可以进入后台管理",
+    "active": true,
+    "permIdList": [],
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-20 21:49:09",
+    "id": "4cee7a676d984191a0ab89cf679a55a1",
+    "valid": true
+  },
+  {
+    "roleName": "master",
+    "roleNameCn": "主人",
+    "remarks": "主人拥有系统所有功能，在后台管理中可以进行更多功能操作",
+    "active": true,
+    "permIdList": [],
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-20 21:49:09",
+    "id": "b763e366db0e40bb8c3101227b080821",
+    "valid": true
+  }
+]

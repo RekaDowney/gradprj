@@ -21,19 +21,23 @@
     <c:set var="baseUrl" value="${scheme}://${host}:${port}${ctx}"/>
 
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/bootstrap/css/bootstrap.min.css"/>
+
+    <script type="text/javascript" src="${baseUrl}/resources/js/jquery.js"></script>
+    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/tip/popupTip.css"/>
+    <script type="text/javascript" src="${baseUrl}/resources/tip/popupTip.js"></script>
+    <script type="text/javascript" src="${baseUrl}/resources/js/common.js"></script>
 </head>
 <body>
 <div class="container">
     <div class="btnContainer">
-        <button>
-            <a href="${document.docUrl}">弹出式编辑</a>
-        </button>
+        <a class="btn btn-info" href="${document.docUrl}">
+            弹出式编辑
+        </a>
         <shiro:hasPermission name="doc:*:download">
-            <a href="${baseUrl}/doc/${document.id}/download">下载</a>
+            <a class="btn btn-primary" href="${baseUrl}/doc/${document.id}/download">下载</a>
         </shiro:hasPermission>
-        <button>
-            <a href="${baseUrl}/doc/${document.categoryId}/list">返回列表页</a>
-        </button>
+        <a id="returnPage" class="btn btn-info">返回列表页</a>
     </div>
     <div class="officeContainer">
         <po:PageOfficeCtrl id="docCtrl"/>
@@ -41,6 +45,10 @@
 </div>
 
 <script type="text/javascript">
+
+    $(function () {
+        $("#returnPage").attr('href', "${baseUrl}/doc/${document.categoryId}/page/0/" + DEFAULT_PAGE_SIZE);
+    });
 
     var doc = document.getElementById("docCtrl");
 
@@ -51,6 +59,7 @@
 
     function saveFile() {
         doc.WebSave();
+        Tip.success("保存成功！");
     }
 
 </script>

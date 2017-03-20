@@ -28,4 +28,9 @@ public class ExceptionController {
         return "ex/40x";
     }
 
+    @RequestMapping(value = "/error/unauthorized", method = RequestMethod.GET)
+    public String unauthorized() {
+        return "ex/unauthorized";
+    }
+
 }

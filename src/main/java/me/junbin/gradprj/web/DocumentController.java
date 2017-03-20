@@ -1,6 +1,7 @@
 package me.junbin.gradprj.web;
 
 import com.google.gson.JsonObject;
+import com.zhuozhengsoft.pageoffice.FileSaver;
 import com.zhuozhengsoft.pageoffice.PDFCtrl;
 import com.zhuozhengsoft.pageoffice.PDFOpenModeType;
 import com.zhuozhengsoft.pageoffice.PageOfficeCtrl;
@@ -37,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,6 +46,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static me.junbin.gradprj.util.DocumentUtils.getActualPath;
 import static me.junbin.gradprj.util.Global.*;
@@ -56,7 +59,6 @@ import static me.junbin.gradprj.util.Global.*;
  */
 @Controller
 @RequestMapping(value = "/doc")
-@RequiresAuthentication
 public class DocumentController extends BasePoController {
 
     // JS 只有在值为 0 NaN 空字符串 null undefined false 这六种情况下条件判断返回 false
@@ -187,6 +189,7 @@ public class DocumentController extends BasePoController {
         }
     }
 
+/*
     @RequestMapping(value = "/{categoryId:\\w{32}}/list", method = RequestMethod.GET)
     public String listPage(@PathVariable("categoryId") String categoryId,
                            HttpServletRequest request, Model model) {
@@ -197,7 +200,33 @@ public class DocumentController extends BasePoController {
         model.addAttribute("docList", documentList);
         return "doc/list";
     }
+*/
 
+    @RequiresAuthentication
+    @RequestMapping(value = "/page", method = RequestMethod.GET)
+    public String redirectPage(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account) {
+        Optional<Perm> perm = account.getPermList().stream().filter(Perm::isAttachable).findFirst();
+        assert perm.isPresent();
+        return "redirect:/doc/" + perm.get().getId() + "/page/0/10";
+    }
+
+    @RequiresAuthentication
+    @RequestMapping(value = "/{id:\\w{32}}/latest", method = RequestMethod.GET)
+    public String latest(Model model, @PathVariable("id") String id) {
+        Perm category = permService.selectById(id);
+        Page<Document> page = documentService.latest(new PageRequest(0, 10));
+        model.addAttribute("category", category);
+        model.addAttribute("page", page);
+        return "doc/latest";
+    }
+
+    @RequiresAuthentication
+    @RequestMapping(value = "/excellence", method = RequestMethod.GET)
+    public String excellence(Model model) {
+        return "doc/excellence";
+    }
+
+    @RequiresAuthentication
     @RequestMapping(value = "/{categoryId:\\w{32}}/page/{pageOffset:\\d+}/{pageSize:\\d+}", method = RequestMethod.GET)
     public String page(@PathVariable("categoryId") String categoryId,
                        @PathVariable("pageOffset") int pageOffset,
@@ -210,13 +239,15 @@ public class DocumentController extends BasePoController {
         if (!CollectionUtils.isEmpty(documentList)) {
             urlViewRebuild(documentList);
         }
+        model.addAttribute("menuTree", MyGsonor.SN_SIMPLE.toJson(Global.getCategoryTree()));
         model.addAttribute("category", category);
         model.addAttribute("page", documentPage);
-        return "doc/list";
+        return "doc/page";
     }
 
-    @RequestMapping(value = "/{categoryId:\\w{32}}}/page/{pageOffset:\\d+}/{pageSize:\\d+}", method = {RequestMethod.POST})
     @ResponseBody
+    @RequiresAuthentication
+    @RequestMapping(value = "/{categoryId:\\w{32}}/page/{pageOffset:\\d+}/{pageSize:\\d+}", method = {RequestMethod.POST})
     public Object pageAjax(@PathVariable("categoryId") String categoryId,
                            @PathVariable("pageOffset") int pageOffset,
                            @PathVariable("pageSize") int pageSize) {
@@ -460,7 +491,13 @@ public class DocumentController extends BasePoController {
 
     @RequestMapping(value = "{docId:\\w{32}}/save", method = RequestMethod.POST)
     @RequiresPermissions(value = {"doc:*:edit"})
-    public void docSave(@PathVariable("docId") String docId) {
+    public void docSave(@PathVariable("docId") String docId,
+                        HttpServletRequest request, HttpServletResponse response) {
+        Document document = documentService.selectById(docId);
+        Path path = DocumentUtils.getActualPath(document.getDocUrl());
+        FileSaver fileSaver = new FileSaver(request, response);
+        fileSaver.saveToFile(path.toString());
+        fileSaver.close();
     }
 
 }

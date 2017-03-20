@@ -20,6 +20,8 @@
 <%-- 订制通用变量 --%>
 
 <script type="text/javascript" src="${baseUrl}/resources/js/jquery.js"></script>
+<script type="text/javascript" src="${baseUrl}/resources/js/common.js"></script>
+<link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/common.css"/>
 
 <%-- 引入自定义右下角提示框 --%>
 <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/tip/popupTip.css"/>

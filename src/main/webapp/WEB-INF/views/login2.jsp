@@ -31,9 +31,9 @@
         </c:if>
         <input type="hidden" name="loginAsVisitor" value="false" class="loginAsVisitor"/>
 
-        <c:if test="${not empty requestScope.loginError}">
+        <c:if test="${not empty loginError}">
             <div id="errorTip">
-                <div style="padding: 13px 0;">${requestScope.loginError}</div>
+                <div style="padding: 13px 0;">${loginError}</div>
             </div>
         </c:if>
 
@@ -60,11 +60,11 @@
 
     $(function () {
 
-        $("#asVisitor").unbind('click').on('click', function (e) {
+        $("#asVisitor").off('click').on('click', function (e) {
             $("#loginType").text('loginAsVisitor');
         });
 
-        $("#login").unbind('click').on('click', function (e) {
+        $("#login").off('click').on('click', function (e) {
             $("#loginType").text('login');
         });
 

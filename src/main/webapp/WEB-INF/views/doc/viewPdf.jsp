@@ -22,26 +22,29 @@
     <c:set var="baseUrl" value="${scheme}://${host}:${port}${ctx}"/>
 
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/bootstrap/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="${baseUrl}/resources/js/jquery.js"></script>
+    <script type="text/javascript" src="${baseUrl}/resources/js/common.js"></script>
 </head>
-<body>
+<body class="container">
 
-<div class="container">
-    <div class="btnContainer">
-        <button>
-            <a href="${document.docUrl}">弹出式阅读</a>
-        </button>
-        <shiro:hasPermission name="doc:*:download">
-            <a href="${baseUrl}/doc/${document.id}/download">下载</a>
-        </shiro:hasPermission>
-        <button>
-            <a href="${baseUrl}/doc/${document.categoryId}/list">返回列表页</a>
-        </button>
-    </div>
-    <div class="officeContainer">
-        <po:PDFCtrl id="pdfCtrl"/>
-    </div>
+<div class="btnContainer">
+    <a class="btn btn-info" href="${document.docUrl}">
+        弹出式阅读
+    </a>
+    <shiro:hasPermission name="doc:*:download">
+        <a class="btn btn-primary" href="${baseUrl}/doc/${document.id}/download">下载</a>
+    </shiro:hasPermission>
+    <a id="returnPage" class="btn btn-info">返回列表页</a>
+</div>
+<div class="officeContainer">
+    <po:PDFCtrl id="pdfCtrl"/>
 </div>
 <script type="text/javascript">
+    $(function () {
+        $("#returnPage").attr('href', "${baseUrl}/doc/${document.categoryId}/page/0/" + DEFAULT_PAGE_SIZE);
+    });
+
     var doc = document.getElementById("pdfCtrl");
 
     // 全屏切换

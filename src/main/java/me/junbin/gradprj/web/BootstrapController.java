@@ -40,7 +40,6 @@ import java.io.IOException;
 @RequestMapping(value = "/")
 public class BootstrapController extends BaseController {
 
-
     @Autowired
     private CaptchaService textKaptchaService;
 
@@ -202,6 +201,11 @@ public class BootstrapController extends BaseController {
     private void setNotCache(HttpServletResponse response) {
         response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
         response.setHeader("Pragma", "no-cache");
+    }
+
+    @RequestMapping(value = "/about", method = RequestMethod.GET)
+    public String aboutUs() {
+        return "common/about";
     }
 
 }

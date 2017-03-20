@@ -21,11 +21,15 @@
     <c:set var="baseUrl" value="${scheme}://${host}:${port}${ctx}"/>
 
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/common.css"/>
+    <script type="text/javascript" src="${baseUrl}/resources/js/jquery.js"></script>
+    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/tip/popupTip.css"/>
+    <script type="text/javascript" src="${baseUrl}/resources/tip/popupTip.js"></script>
 </head>
 <body>
-<div style="width: 100%;height: 100%;">
+<div style="width: 100%;height: 95%;">
     <po:PageOfficeCtrl id="docCtrl"/>
 </div>
+<%--<div style="width: 100%;height: 10%;"></div>--%>
 
 <script type="text/javascript">
 
@@ -38,6 +42,7 @@
 
     function saveFile() {
         doc.WebSave();
+        Tip.success("保存成功！");
     }
 
     /*

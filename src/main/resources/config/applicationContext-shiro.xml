@@ -77,11 +77,21 @@
             class="org.apache.shiro.spring.LifecycleBeanPostProcessor"
     />
 
+<!--
     <bean
             id="shiroFilter"
             class="org.apache.shiro.spring.web.ShiroFilterFactoryBean"
             p:securityManager-ref="securityManager"
             p:loginUrl="/login"
+            p:unauthorizedUrl="/unauthorized"
+            p:filterChainDefinitionMap-ref="filterChainMap"
+    />
+-->
+
+    <bean
+            id="shiroFilter"
+            class="org.apache.shiro.spring.web.ShiroFilterFactoryBean"
+            p:securityManager-ref="securityManager"
             p:unauthorizedUrl="/unauthorized"
             p:filterChainDefinitionMap-ref="filterChainMap"
     />

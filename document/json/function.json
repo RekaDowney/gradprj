@@ -1,0 +1,68 @@
+[
+  {
+    "permName": "文档浏览",
+    "permPattern": "doc:*:view",
+    "permType": "功能类",
+    "weight": 200,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "0445ba623d534ec2878801c252a86d1a",
+    "valid": true
+  },
+  {
+    "permName": "文档编辑",
+    "permPattern": "doc:*:edit",
+    "permType": "功能类",
+    "weight": 200,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "43b9d6210cd64e7a84bd2cc33aa01649",
+    "valid": true
+  },
+  {
+    "permName": "文档上传",
+    "permPattern": "doc:*:upload",
+    "permType": "功能类",
+    "weight": 200,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "67eb917edb9f4b60b353612553ea61a0",
+    "valid": true
+  },
+  {
+    "permName": "文档下载",
+    "permPattern": "doc:*:download",
+    "permType": "功能类",
+    "weight": 200,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "97a32f2cb13e4f1386e3fabc7711a07a",
+    "valid": true
+  },
+  {
+    "permName": "文档格式转换",
+    "permPattern": "doc:*:transfer",
+    "permType": "功能类",
+    "weight": 200,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "bf135b028d344c688f98e9745deaa26c",
+    "valid": true
+  },
+  {
+    "permName": "请假",
+    "permPattern": "ask:for:leave",
+    "permType": "功能类",
+    "weight": 200,
+    "active": true,
+    "creator": "d7ff797575604fd1b9960ab10c30d668",
+    "createdTime": "2017-02-21 20:36:19",
+    "id": "8a76458cbdf4416896e995aee25a6558",
+    "valid": true
+  }
+]

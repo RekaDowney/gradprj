@@ -20,30 +20,36 @@
     <c:set var="baseUrl" value="${scheme}://${host}:${port}${ctx}"/>
 
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/common.css"/>
+    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/bootstrap/css/bootstrap.min.css"/>
+    <script type="text/javascript" src="${baseUrl}/resources/js/jquery.js"></script>
+    <script type="text/javascript" src="${baseUrl}/resources/js/common.js"></script>
 </head>
-<body>
+<body class="container">
 
-<div class="container">
-    <div class="btnContainer">
-        <button>
-            <a href="${document.docUrl}">弹出式阅读</a>
-        </button>
-        <shiro:hasPermission name="doc:*:download">
-            <a href="${baseUrl}/doc/${document.id}/download">下载</a>
-        </shiro:hasPermission>
-        <button>
-            <a href="${baseUrl}/doc/${document.categoryId}/list">返回列表页</a>
-        </button>
-        <shiro:hasPermission name="doc:*:edit">
-            <a href="${baseUrl}/doc/${document.id}/edit">编辑</a>
-        </shiro:hasPermission>
-    </div>
-    <div class="officeContainer">
-        <po:PageOfficeCtrl id="docCtrl"/>
-    </div>
+<div class="btnContainer">
+    <a class="btn btn-info" href="${document.docUrl}">
+        弹出式阅读
+    </a>
+    <shiro:hasPermission name="doc:*:download">
+        <a class="btn btn-primary" href="${baseUrl}/doc/${document.id}/download">下载</a>
+    </shiro:hasPermission>
+    <button>
+        <a id="returnPage" class="btn btn-info">返回列表页</a>
+    </button>
+    <shiro:hasPermission name="doc:*:edit">
+        <a class="btn btn-primary" href="${baseUrl}/doc/${document.id}/edit">编辑</a>
+    </shiro:hasPermission>
+</div>
+<div class="officeContainer">
+    <po:PageOfficeCtrl id="docCtrl"/>
 </div>
 
 <script type="text/javascript">
+
+    $(function () {
+        $("#returnPage").attr('href', "${baseUrl}/doc/${document.categoryId}/page/0/" + DEFAULT_PAGE_SIZE);
+    });
+
     var doc = document.getElementById("docCtrl");
 
     // 全屏切换
