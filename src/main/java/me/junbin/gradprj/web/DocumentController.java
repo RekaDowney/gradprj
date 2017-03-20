@@ -77,6 +77,14 @@ public class DocumentController extends BasePoController {
         return "doc/upload";
     }
 
+    @RequestMapping(value = "/{categoryId:\\w{32}}/upload", method = RequestMethod.GET)
+    @RequiresPermissions({"doc:*:upload"})
+    public String upload(@PathVariable("categoryId") String categoryId, Model model) {
+        model.addAttribute("selectedId", categoryId);
+        model.addAttribute("menuTree", MyGsonor.SN_SIMPLE.toJson(Global.getCategoryTree()));
+        return "doc/upload";
+    }
+
     @ResponseBody
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     @RequiresPermissions(value = {"doc:*:upload"})
@@ -342,7 +350,7 @@ public class DocumentController extends BasePoController {
         document.setDocName(DocumentUtils.simpleName(document.getDocName()));
         document.setDocUrl(this.createPopupPdfViewLink(request, docId));
         pdfCtrl.setCaption(document.getDocName());
-
+        pdfCtrl.setMenubar(false); // 隐藏菜单栏
         pdfCtrl.webOpen(url, PDFOpenModeType.pdfViewOnly);
         pdfCtrl.setTagId("pdfCtrl");
 
@@ -413,6 +421,7 @@ public class DocumentController extends BasePoController {
         String url = DocumentUtils.getActualPathUri(document.getDocUrl());
         document.setDocName(DocumentUtils.simpleName(document.getDocName()));
         pdfCtrl.setCaption(document.getDocName());
+        pdfCtrl.setMenubar(false);
 
         pdfCtrl.webOpen(url, PDFOpenModeType.pdfViewOnly);
         pdfCtrl.setTagId("pdfCtrl");
@@ -449,6 +458,8 @@ public class DocumentController extends BasePoController {
         ctrl.addCustomToolButton("切换全屏", "fullScreenSwitch", 4);
         ctrl.addCustomToolButton("保存", "saveFile", 1);
 
+        ctrl.setMenubar(false);
+
         ctrl.webOpen(url, document.getDocType().normalEdit(), account.getPrincipal());
         ctrl.setTagId("docCtrl");
         model.addAttribute("document", document);
@@ -481,6 +492,7 @@ public class DocumentController extends BasePoController {
         ctrl.setCaption(document.getDocName()); // 设置控件标题栏
         ctrl.addCustomToolButton("切换全屏", "fullScreenSwitch", 4);
         ctrl.addCustomToolButton("保存", "saveFile", 1);
+        ctrl.setMenubar(false);
 
         ctrl.webOpen(url, document.getDocType().normalEdit(), account.getPrincipal());
         ctrl.setTagId("docCtrl");

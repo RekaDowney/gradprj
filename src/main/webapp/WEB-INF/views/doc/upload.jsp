@@ -11,7 +11,8 @@
     <meta charset="UTF-8">
     <title>文档上传</title>
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/common.css"/>
-    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/buttons.css"/>
+    <%--<link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/buttons.css"/>--%>
+    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/bootstrap/css/bootstrap.min.css"/>
     <%-- ztree，必须先引入 jQuery --%>
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/ztree/css/zTreeStyle.css"/>
     <script type="text/javascript" src="${baseUrl}/resources/ztree/js/jquery.ztree.core.js"></script>
@@ -21,6 +22,11 @@
     <script type="text/javascript" src="${baseUrl}/resources/layer/layer.js"></script>
     <%-- layer 弹出层提示框，必须先引入 jQuery --%>
     <style type="text/css">
+
+        body {
+            padding-left: 10px;
+        }
+
         .fileTag {
             padding: 4px 10px;
             height: 30px;
@@ -60,6 +66,13 @@
             right: 0;
             font-size: 20px;
         }
+
+        #returnPage {
+            float: right;
+            display: inline-block;
+            margin: 4px 10px 0 0;
+            padding: 5px 10px;
+        }
     </style>
 </head>
 <body>
@@ -77,11 +90,12 @@
         流文件： application/octet-stream
 --%>
 
-<div>
-    <label for="category">上传到栏目：
+<div id="categoryContainer">
+    <label for="category" style="padding-top: 10px;">上传到栏目：
         <input id="category" type="text" readonly value="" style="width: 200px;"/>
     </label>
     <input id="categoryId" type="hidden"/>
+    <a id="returnPage" class="btn btn-primary">返回当前选中栏目</a>
 </div>
 <div id="menuContainer" style="display:none; position: absolute;">
     <ul id="categoryMenu" class="ztree" style="margin-top:0; width:240px;background-color: #E8E3C0;"></ul>
@@ -103,8 +117,8 @@
         <br/>
         <span class="filenameList"></span>
     </p>
-    <a id="append" class="button button-raised button-primary button-pill">继续添加</a>
-    <a id="upload" class="button button-action button-pill">上传</a>
+    <a id="append" class="btn btn-info">继续添加</a>
+    <a id="upload" class="btn btn-primary">上传</a>
 </form>
 <script type="text/javascript">
     // 全局变量，用来存储本次需要上传的文件，用于文件过滤
@@ -185,6 +199,15 @@
                     fileArr.push(file);
                 }
             }
+            if (fileArr.length == 0) {
+                layer.open({
+                    icon: 5,
+                    title: "错误",
+                    content: '请先选择要上传的文件',
+                    shadeClose: true //开启遮罩关闭
+                });
+                return;
+            }
             for (i = 0; file = fileArr[i]; i++) {
                 formData.append(file.name, file);
             }
@@ -197,12 +220,6 @@
                 contentType: false,
                 processData: false,
                 success: function (data) {
-                    /*
-                     data = JSON.parse(data);
-                     if (!data[statusKey]) {
-                     data = JSON.parse(data);
-                     }
-                     */
                     var statusKey = "${global:statusKey()}";
                     if (data[statusKey] === "${global:statusOk()}") {
 
@@ -301,6 +318,7 @@
             // var zTree = $.fn.zTree.getZTreeObj("categoryMenu");
             $("#category").val(treeNode.name);
             $("#categoryId").val(treeNode.id);
+            changeReturnUrl();
         }
 
         function showMenu() {
@@ -338,6 +356,43 @@
                 showMenu();
                 return false;
             });
+            // 是否默认选中
+            var selected = "${selectedId}";
+            if (selected && selected.length === 32) {
+                var tree = $.fn.zTree.getZTreeObj("categoryMenu");
+                var node = tree.getNodeByParam('id', selected);
+                tree.selectNode(node);
+                $("#category").val(node.name);
+                $("#categoryId").val(node.id);
+                changeReturnUrl(selected);
+            }
+        });
+
+        function changeReturnUrl(categoryId) {
+            var returnPage = $("#returnPage");
+            if (categoryId && categoryId.length == 32) {
+                returnPage.attr('href', "${baseUrl}/doc/" + categoryId + "/page/0/" + DEFAULT_PAGE_SIZE);
+            } else {
+                categoryId = $("#categoryId").val();
+                if (categoryId.length == 32) {
+                    returnPage.attr('href', "${baseUrl}/doc/" + categoryId + "/page/0/" + DEFAULT_PAGE_SIZE);
+                }
+            }
+        }
+
+        $("#categoryContainer").on('click', '#returnPage', function (event) {
+            var _this = $(this);
+            var href = _this.attr('href');
+            if (href.length <= 0) {
+                layer.open({
+                    icon: 5,
+                    title: "错误",
+                    content: '请先选择要返回的栏目',
+                    shadeClose: true //开启遮罩关闭
+                });
+                event.stopPropagation();
+                event.preventDefault();
+            }
         });
 
     });

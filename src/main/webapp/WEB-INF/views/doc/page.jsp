@@ -79,6 +79,12 @@
             text-align: center;
             padding-top: 10px;
         }
+
+        span.download.btn.btn-info {
+            float: right;
+            padding: 0 10px;
+        }
+
     </style>
 
 </head>
@@ -86,25 +92,59 @@
 <div class="header" style="background-color: #c56f96">
     <img src="${baseUrl}/resources/images/banner.png" height="40"/>
 </div>
+<script type="text/javascript">
+    var canDownload = false;
+    <shiro:hasPermission name="doc:*:download">
+    canDownload = true;
+    </shiro:hasPermission>
+</script>
 <div class="main">
     <div class="main-left" style="background-color: #DCE2D9">
+        <%-- 拥有上传权限 --%>
+        <shiro:hasPermission name="doc:*:upload">
+            <div class="function-btn-group" style="margin-top: 2px;margin-left: 2px;">
+                <a id="upload" class="btn btn-primary">上传文档到当前栏目</a>
+            </div>
+            <hr style="border: 0;border-top: 1px solid #3CADD8;margin-top: 5px;margin-bottom: 5px;"/>
+        </shiro:hasPermission>
         <div id="menuContainer">
-            <ul id="categoryMenu" class="ztree" style="margin-top:0; width:100%;"></ul>
+            <ul id="categoryMenu" class="ztree" style=" width:100%;"></ul>
         </div>
     </div>
     <div class="main-right">
         <div class="main-right-body" style="height: 90%;">
             <div class="list-group">
-                <c:forEach items="${page.content}" var="doc">
-                    <a href="${baseUrl}${doc.docUrl}" target="_blank" class="list-group-item">
-                        <span class="docId" hidden>${doc.id}</span>
-                        <span class="docName">${doc.docName}</span>
-                        <span class="time-badge">${global:format(doc.createdTime, "yyyy-MM-dd HH")}</span>
-                        <c:if test="${global:oneDayAgo(doc.createdTime)}">
-                            <span class="badge">新</span>
-                        </c:if>
-                    </a>
-                </c:forEach>
+                <%-- 拥有下载权限 --%>
+                <shiro:hasPermission name="doc:*:download">
+                    <c:forEach items="${page.content}" var="doc">
+                        <a href="${baseUrl}${doc.docUrl}" target="_blank" class="list-group-item">
+                            <span class="docId" hidden>${doc.id}</span>
+                            <span class="docName">${doc.docName}</span>
+
+                                <%-- 添加下载按钮 --%>
+                            <span class="download btn btn-info" href="${baseUrl}/doc/${doc.id}/download">下载</span>
+                                <%-- 添加下载按钮 --%>
+
+                            <span class="time-badge">${global:format(doc.createdTime, "yyyy-MM-dd HH")}</span>
+                            <c:if test="${global:oneDayAgo(doc.createdTime)}">
+                                <span class="badge">新</span>
+                            </c:if>
+                        </a>
+                    </c:forEach>
+                </shiro:hasPermission>
+                <%-- 没有下载权限 --%>
+                <shiro:lacksPermission name="doc:*:download">
+                    <c:forEach items="${page.content}" var="doc">
+                        <a href="${baseUrl}${doc.docUrl}" target="_blank" class="list-group-item">
+                            <span class="docId" hidden>${doc.id}</span>
+                            <span class="docName">${doc.docName}</span>
+                            <span class="time-badge">${global:format(doc.createdTime, "yyyy-MM-dd HH")}</span>
+                            <c:if test="${global:oneDayAgo(doc.createdTime)}">
+                                <span class="badge">新</span>
+                            </c:if>
+                        </a>
+                    </c:forEach>
+                </shiro:lacksPermission>
             </div>
         </div>
         <div class="main-right-tail" style="height: 10%;">
@@ -173,6 +213,8 @@
             var tree = $.fn.zTree.getZTreeObj("categoryMenu");
             var node = tree.getNodeByParam('id', "${category.id}");
             tree.selectNode(node);
+            // 设置上传到本栏目的按钮链接
+            $("#upload").attr('href', "${baseUrl}/doc/" + node.id + "/upload");
         })();
 
 
@@ -223,8 +265,11 @@
             }
             var tree = $.fn.zTree.getZTreeObj("categoryMenu");
             var node = tree.getSelectedNodes()[0];
+            $("title").html(node.name);
             var path = "${baseUrl}/doc/" + node.id + '/page/' + pageOffset + '/' + pageSize;
             var listBody = $(".main-right-body");
+            // 设置上传到本栏目的按钮链接
+            $("#upload").attr('href', "${baseUrl}/doc/" + node.id + "/upload");
             $.ajax({
                 url: path,
                 type: "POST",
@@ -238,14 +283,29 @@
                     var res = "<div class='list-group'>";
                     var docPage = data.content;
                     var dateTime;
-                    for (var i = 0, doc; doc = docPage[i]; i++) {
-                        res += "<a href='${baseUrl}" + doc.docUrl + "' target='_blank' class='list-group-item'>";
-                        res += "<span class='docId' hidden>" + doc.id + "</span>";
-                        res += "<span class='docName'>" + doc.docName + "</span>";
-                        dateTime = DateTime.parse(doc.createdTime, 'yyyy-MM-dd HH:mm:ss');
-                        res += "<span class='time-badge'>" + dateTime.format('yyyy-MM-dd HH') + "</span>";
-                        if (dateTime.plusDays(1).isAfterNow()) {
-                            res += "<span class='badge'>新</span>";
+                    var i, doc;
+                    if (canDownload) { // 有下载权限
+                        for (i = 0; doc = docPage[i]; i++) {
+                            res += "<a href='${baseUrl}" + doc.docUrl + "' target='_blank' class='list-group-item'>";
+                            res += "<span class='docId' hidden>" + doc.id + "</span>";
+                            res += "<span class='docName'>" + doc.docName + "</span>";
+                            res += "<span class='download btn btn-info' href='${baseUrl}/doc/" + doc.id + "/download'>下载</span>";
+                            dateTime = DateTime.parse(doc.createdTime, 'yyyy-MM-dd HH:mm:ss');
+                            res += "<span class='time-badge'>" + dateTime.format('yyyy-MM-dd HH') + "</span>";
+                            if (dateTime.plusDays(1).isAfterNow()) {
+                                res += "<span class='badge'>新</span>";
+                            }
+                        }
+                    } else {
+                        for (i = 0; doc = docPage[i]; i++) {
+                            res += "<a href='${baseUrl}" + doc.docUrl + "' target='_blank' class='list-group-item'>";
+                            res += "<span class='docId' hidden>" + doc.id + "</span>";
+                            res += "<span class='docName'>" + doc.docName + "</span>";
+                            dateTime = DateTime.parse(doc.createdTime, 'yyyy-MM-dd HH:mm:ss');
+                            res += "<span class='time-badge'>" + dateTime.format('yyyy-MM-dd HH') + "</span>";
+                            if (dateTime.plusDays(1).isAfterNow()) {
+                                res += "<span class='badge'>新</span>";
+                            }
                         }
                     }
                     res += "</div>";
@@ -266,6 +326,18 @@
                 });
             }
         }
+
+        $(".main-right-body").on('click', 'span.download.btn.btn-info', function (event) {
+            event.stopPropagation(); //阻止事件冒泡
+            event.preventDefault(); //阻止默认事件的执行，比如a的跳转。
+            var href = $(this).attr('href');
+            window.open(href, '_blank');
+//            var a = $("<a>");
+//            a.attr("href", href);
+//            $("body").append(a);
+//            a.trigger('click');
+//            a.remove();
+        });
 
         /*
 
@@ -290,4 +362,6 @@
     });
 </script>
 </body>
+<div id="askForLeave" style="width: 60%; height: 40%;">
+</div>
 </html>
