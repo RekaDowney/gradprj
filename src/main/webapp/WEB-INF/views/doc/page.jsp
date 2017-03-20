@@ -113,39 +113,47 @@
     </div>
     <div class="main-right">
         <div class="main-right-body" style="height: 90%;">
-            <div class="list-group">
-                <%-- 拥有下载权限 --%>
-                <shiro:hasPermission name="doc:*:download">
-                    <c:forEach items="${page.content}" var="doc">
-                        <a href="${baseUrl}${doc.docUrl}" target="_blank" class="list-group-item">
-                            <span class="docId" hidden>${doc.id}</span>
-                            <span class="docName">${doc.docName}</span>
+            <c:choose>
+                <c:when test="${empty page.content}">
+                    <span style='font-size: 20px;color: red;'>本栏目暂无文档！</span>
+                </c:when>
+                <c:otherwise>
+                    <div class="list-group">
+                            <%-- 拥有下载权限 --%>
+                        <shiro:hasPermission name="doc:*:download">
+                            <c:forEach items="${page.content}" var="doc">
+                                <a href="${baseUrl}${doc.docUrl}" target="_blank" class="list-group-item">
+                                    <span class="docId" hidden>${doc.id}</span>
+                                    <span class="docName">${doc.docName}</span>
 
-                                <%-- 添加下载按钮 --%>
-                            <span class="download btn btn-info" href="${baseUrl}/doc/${doc.id}/download">下载</span>
-                                <%-- 添加下载按钮 --%>
+                                        <%-- 添加下载按钮 --%>
+                                    <span class="download btn btn-info"
+                                          href="${baseUrl}/doc/${doc.id}/download">下载</span>
+                                        <%-- 添加下载按钮 --%>
 
-                            <span class="time-badge">${global:format(doc.createdTime, "yyyy-MM-dd HH")}</span>
-                            <c:if test="${global:oneDayAgo(doc.createdTime)}">
-                                <span class="badge">新</span>
-                            </c:if>
-                        </a>
-                    </c:forEach>
-                </shiro:hasPermission>
-                <%-- 没有下载权限 --%>
-                <shiro:lacksPermission name="doc:*:download">
-                    <c:forEach items="${page.content}" var="doc">
-                        <a href="${baseUrl}${doc.docUrl}" target="_blank" class="list-group-item">
-                            <span class="docId" hidden>${doc.id}</span>
-                            <span class="docName">${doc.docName}</span>
-                            <span class="time-badge">${global:format(doc.createdTime, "yyyy-MM-dd HH")}</span>
-                            <c:if test="${global:oneDayAgo(doc.createdTime)}">
-                                <span class="badge">新</span>
-                            </c:if>
-                        </a>
-                    </c:forEach>
-                </shiro:lacksPermission>
-            </div>
+                                    <span class="time-badge">${global:format(doc.createdTime, "yyyy-MM-dd HH")}</span>
+                                    <c:if test="${global:oneDayAgo(doc.createdTime)}">
+                                        <span class="badge">新</span>
+                                    </c:if>
+                                </a>
+                            </c:forEach>
+                        </shiro:hasPermission>
+                            <%-- 没有下载权限 --%>
+                        <shiro:lacksPermission name="doc:*:download">
+                            <c:forEach items="${page.content}" var="doc">
+                                <a href="${baseUrl}${doc.docUrl}" target="_blank" class="list-group-item">
+                                    <span class="docId" hidden>${doc.id}</span>
+                                    <span class="docName">${doc.docName}</span>
+                                    <span class="time-badge">${global:format(doc.createdTime, "yyyy-MM-dd HH")}</span>
+                                    <c:if test="${global:oneDayAgo(doc.createdTime)}">
+                                        <span class="badge">新</span>
+                                    </c:if>
+                                </a>
+                            </c:forEach>
+                        </shiro:lacksPermission>
+                    </div>
+                </c:otherwise>
+            </c:choose>
         </div>
         <div class="main-right-tail" style="height: 10%;">
             <ul id="paginator" class="pagination" style="padding-left: 35%;"></ul>
@@ -217,6 +225,49 @@
             $("#upload").attr('href', "${baseUrl}/doc/" + node.id + "/upload");
         })();
 
+        var total = ${page.totalPages};
+        // 如果数据为空，此时需要特殊处理，
+        // 因为初始化 jqPaginator 的时候必须保证 totalPages 大于 0 或者 totalCounts 大于 0
+        if (total == 0) {
+            $.jqPaginator('#paginator', {
+                totalPages: 1,
+                visiblePages: 7,
+                currentPage: 1,
+                first: '<li class="first"><a href="javascript:void(0);">首页</a></li>',
+                prev: '<li class="prev"><a href="javascript:void(0);">上一页</a></li>',
+                next: '<li class="next"><a href="javascript:void(0);">下一页</a></li>',
+                last: '<li class="last"><a href="javascript:void(0);">尾页</a></li>',
+                page: '<li class="page"><a href="javascript:void(0);">{{page}}</a></li>',
+                onPageChange: function (num, type) {
+                    if (type !== 'change') { // 只处理 change 事件
+                        return;
+                    }
+                    var pageOffset = num - 1;
+                    var pageSize = getPageSize();
+                    listChange(pageOffset, pageSize);
+                }
+            });
+            $('#paginator').hide();
+        } else {
+            $.jqPaginator('#paginator', {
+                totalPages: ${page.totalPages},
+                visiblePages: 7,
+                currentPage: ${page.curPageOffset + 1},
+                first: '<li class="first"><a href="javascript:void(0);">首页</a></li>',
+                prev: '<li class="prev"><a href="javascript:void(0);">上一页</a></li>',
+                next: '<li class="next"><a href="javascript:void(0);">下一页</a></li>',
+                last: '<li class="last"><a href="javascript:void(0);">尾页</a></li>',
+                page: '<li class="page"><a href="javascript:void(0);">{{page}}</a></li>',
+                onPageChange: function (num, type) {
+                    if (type !== 'change') { // 只处理 change 事件
+                        return;
+                    }
+                    var pageOffset = num - 1;
+                    var pageSize = getPageSize();
+                    listChange(pageOffset, pageSize);
+                }
+            });
+        }
 
         $.jqPaginator('#paginator', {
             totalPages: ${page.totalPages},
@@ -234,17 +285,6 @@
                 var pageOffset = num - 1;
                 var pageSize = getPageSize();
                 listChange(pageOffset, pageSize);
-                /*
-                 var pageOffset = num - 1;
-                 var pathname = window.location.pathname; // pathname 包含了 contextPath
-                 var regex = /\/doc\/\w{32}\/page\/(\d+)\/(\d+)\/?/;
-                 var res;
-                 if ((res = regex.exec(pathname)) !== null) {
-                 var pageSize = res[2];
-                 path = pathname.replace("/" + res[1] + "/", "/" + pageOffset + "/");
-
-                 }
-                 */
             }
         });
 
@@ -277,7 +317,7 @@
                 success: function (data) {
                     updatePaginator(data);
                     if (data.content.length == 0) {
-                        listBody.empty();
+                        listBody.empty().append("<span style='font-size: 20px;color: red;'>本栏目暂无文档！</span>");
                         return;
                     }
                     var res = "<div class='list-group'>";
