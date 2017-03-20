@@ -259,9 +259,28 @@ FOR EACH ROW
     -- 如果最新入库文档这张表数量大于等于 50，那么删除最旧的一条记录
     IF num_of_newest_table >= 50
     THEN
+
       DELETE FROM document_newest
-      WHERE id = (SELECT MIN(id)
-                  FROM document_newest);
+      WHERE id = (SELECT id
+                  FROM (SELECT min(id) id
+                        FROM document_newest) a);
+    /*
+          -- MySQL 不支持下面的操作
+          -- 即在 同一条 SQL 中，从表 A 查询出某个值之后，该值不能立即作为表 A 的更新操作
+          -- [HY000][1093] You can't specify target table 'document_newest' for update in FROM clause
+          DELETE FROM document_newest
+          WHERE id = (SELECT MIN(id)
+                      FROM document_newest);
+          -- 将 SELECT 语句独立出来之后可以解决这个问题
+          -- DECLARE oldest_id BIGINT UNSIGNED;
+          -- SELECT MIN(id)
+          -- FROM document_newest
+          -- INTO oldest_id;
+          -- DELETE FROM document_newest
+          -- WHERE id = oldest_id;
+
+          -- 或者将 SELECT 出来的数据包装到另一张表里，这样就可以解决该问题了
+    */
     END IF;
 
     INSERT INTO document_newest (doc_id) VALUES (doc_id);
