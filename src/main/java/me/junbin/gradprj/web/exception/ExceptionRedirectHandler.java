@@ -63,7 +63,12 @@ public class ExceptionRedirectHandler {
     @ExceptionHandler(UnauthenticatedException.class)
     public ModelAndView handleUnauthenticatedException(UnauthenticatedException e) {
         if (e.getMessage().contains("Attempting to perform a guest-only operation")) {
-            throw new UnauthorizedException(e.getMessage());
+            HttpSession session = WebUtils2.currentSession();
+            Account account = (Account) session.getAttribute(Global.LOGIN_ACCOUNT_KEY);
+            log.warn(String.format("%s尝试访问与当前身份不符合的地址", account.getPrincipal()), e);
+            ModelAndView mv = new ModelAndView();
+            mv.setView(new RedirectView("/error/unauthorized", true, false, false));
+            return mv;
         }
         log.info("当前尚未登陆", e);
         ModelAndView mv = new ModelAndView();
