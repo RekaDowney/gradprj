@@ -218,14 +218,36 @@ public class DocumentController extends BasePoController {
         return "redirect:/doc/" + perm.get().getId() + "/page/0/10";
     }
 
-    @RequiresAuthentication
-    @RequestMapping(value = "/{id:\\w{32}}/latest", method = RequestMethod.GET)
-    public String latest(Model model, @PathVariable("id") String id) {
-        Perm category = permService.selectById(id);
-        Page<Document> page = documentService.latest(new PageRequest(0, 10));
-        model.addAttribute("category", category);
+    @RequiresPermissions(value = {"channel:*:latest"})
+    @RequestMapping(value = "/latest", method = RequestMethod.GET)
+    public String latest() {
+        return "redirect:/doc/latest/0/10";
+    }
+
+    @RequiresPermissions(value = {"channel:*:latest"})
+    @RequestMapping(value = "/latest/{pageOffset:\\d+}/{pageSize:\\d+}", method = RequestMethod.GET)
+    public String latest(Model model, @PathVariable("pageOffset") int pageOffset,
+                         @PathVariable("pageSize") int pageSize) {
+        Page<Document> page = documentService.latest(new PageRequest(pageOffset, pageSize));
+        List<Document> documentList = page.getContent();
+        if (!CollectionUtils.isEmpty(documentList)) {
+            urlViewRebuild(documentList);
+        }
         model.addAttribute("page", page);
         return "doc/latest";
+    }
+
+    @ResponseBody
+    @RequiresPermissions(value = {"channel:*:latest"})
+    @RequestMapping(value = "/latest/{pageOffset:\\d+}/{pageSize:\\d+}", method = RequestMethod.POST)
+    public Object latest(@PathVariable("pageOffset") int pageOffset,
+                         @PathVariable("pageSize") int pageSize) {
+        Page<Document> page = documentService.latest(new PageRequest(pageOffset, pageSize));
+        List<Document> documentList = page.getContent();
+        if (!CollectionUtils.isEmpty(documentList)) {
+            urlViewRebuild(documentList);
+        }
+        return page;
     }
 
     @RequiresAuthentication

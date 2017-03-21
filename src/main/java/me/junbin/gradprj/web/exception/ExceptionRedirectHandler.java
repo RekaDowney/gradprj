@@ -62,6 +62,9 @@ public class ExceptionRedirectHandler {
 
     @ExceptionHandler(UnauthenticatedException.class)
     public ModelAndView handleUnauthenticatedException(UnauthenticatedException e) {
+        if (e.getMessage().contains("Attempting to perform a guest-only operation")) {
+            throw new UnauthorizedException(e.getMessage());
+        }
         log.info("当前尚未登陆", e);
         ModelAndView mv = new ModelAndView();
         mv.setView(new RedirectView("/login", true, false, false));

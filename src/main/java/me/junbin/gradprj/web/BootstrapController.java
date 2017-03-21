@@ -2,6 +2,7 @@ package me.junbin.gradprj.web;
 
 import me.junbin.commons.util.Args;
 import me.junbin.gradprj.domain.Account;
+import me.junbin.gradprj.domain.Perm;
 import me.junbin.gradprj.service.CaptchaService;
 import me.junbin.gradprj.util.EncryptUtils;
 import me.junbin.gradprj.util.Global;
@@ -29,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * @author : Zhong Junbin
@@ -178,7 +180,10 @@ public class BootstrapController extends BaseController {
     @RequiresAuthentication
     @RequestMapping(value = "/index", method = RequestMethod.GET)
     public String index(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account) {
-        return "index";
+        Optional<Perm> perm = account.getPermList().stream().filter(Perm::isAttachable).findFirst();
+        assert perm.isPresent();
+        return "redirect:/doc/" + perm.get().getId() + "/page/0/10";
+        //return "index";
     }
 
     @RequestMapping(value = "/captcha", method = RequestMethod.GET)

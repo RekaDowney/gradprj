@@ -144,8 +144,6 @@ CREATE TABLE account_role (
   ENGINE = InnoDB
   DEFAULT CHARSET = UTF8
   COMMENT = '用户角色关联表';
-DROP INDEX idx_account_role
-ON role_perm;
 CREATE UNIQUE INDEX idx_account_role
   ON account_role (account_id, role_id);
 
@@ -160,8 +158,6 @@ CREATE TABLE role_perm (
   ENGINE = InnoDB
   DEFAULT CHARSET = UTF8
   COMMENT = '角色权限关联表';
-DROP INDEX idx_role_perm
-ON role_perm;
 CREATE UNIQUE INDEX idx_role_perm
   ON role_perm (role_id, perm_id);
 
@@ -425,7 +421,7 @@ VALUES ('8a76458cbdf4416896e995aee25a6558', '请假', NULL, 'ask:for:leave', '�
 
 -- 菜单类
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
-VALUES ('fce10205237e4774840b171d44d3c416', '最新入库', '/doc/fce10205237e4774840b171d44d3c416/latest', 'channel:*:newest',
+VALUES ('fce10205237e4774840b171d44d3c416', '最新入库', '/doc/latest', 'channel:*:latest',
                                             '菜单类', NULL, 10,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
         TRUE);

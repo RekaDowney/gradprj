@@ -11,6 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <title>${category.permName}</title>
+    <%--<title>文档共享平台</title>--%>
     <%-- ztree --%>
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/ztree/css/zTreeStyle.css"/>
     <script type="text/javascript" src="${baseUrl}/resources/ztree/js/jquery.ztree.core.js"></script>
@@ -85,12 +86,38 @@
             padding: 0 10px;
         }
 
+        .btn-container {
+            float: right;
+            top: 3px;
+            right: 5px;
+        }
+
+        .btn-container > .btn {
+            margin-top: 6px;
+            padding: 3px 10px;
+        }
+
     </style>
 
 </head>
 <body>
-<div class="header" style="background-color: #c56f96">
+<div class="header">
     <img src="${baseUrl}/resources/images/banner.png" height="40"/>
+    <div class="btn-container">
+        <shiro:hasPermission name="channel:*:latest">
+            <a class="btn btn-info" href="${baseUrl}/doc/latest">最新入库文档</a>
+        </shiro:hasPermission>
+        <c:choose>
+            <c:when test="${loginAccount.principal eq global:visitorKey()}">
+                <a class="btn btn-primary" href="${baseUrl}/auth/login">登陆</a>
+                <span>　</span>
+            </c:when>
+            <c:otherwise>
+                <a class="btn btn-primary" href="${baseUrl}/logout">登出</a>
+                <span>　</span>
+            </c:otherwise>
+        </c:choose>
+    </div>
 </div>
 <script type="text/javascript">
     var canDownload = false;
@@ -268,25 +295,6 @@
                 }
             });
         }
-
-        $.jqPaginator('#paginator', {
-            totalPages: ${page.totalPages},
-            visiblePages: 7,
-            currentPage: ${page.curPageOffset + 1},
-            first: '<li class="first"><a href="javascript:void(0);">首页</a></li>',
-            prev: '<li class="prev"><a href="javascript:void(0);">上一页</a></li>',
-            next: '<li class="next"><a href="javascript:void(0);">下一页</a></li>',
-            last: '<li class="last"><a href="javascript:void(0);">尾页</a></li>',
-            page: '<li class="page"><a href="javascript:void(0);">{{page}}</a></li>',
-            onPageChange: function (num, type) {
-                if (type !== 'change') { // 只处理 change 事件
-                    return;
-                }
-                var pageOffset = num - 1;
-                var pageSize = getPageSize();
-                listChange(pageOffset, pageSize);
-            }
-        });
 
         function getPageSize() {
             var p = window.location.pathname;

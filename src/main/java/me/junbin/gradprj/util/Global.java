@@ -174,6 +174,10 @@ public enum Global {
         return STATUS_ERROR;
     }
 
+    public static String getVisitorName() {
+        return VISITOR_NAME;
+    }
+
     private static final class VisitorHolder {
         private static final Account VISITOR;
 

@@ -18,6 +18,12 @@
     </function>
 
     <function>
+        <name>visitorKey</name>
+        <function-class>me.junbin.gradprj.util.Global</function-class>
+        <function-signature>java.lang.String getVisitorName()</function-signature>
+    </function>
+
+    <function>
         <name>docPrefixUrl</name>
         <description>获取文档虚拟目录的映射路径前缀</description>
         <function-class>me.junbin.gradprj.util.Global</function-class>

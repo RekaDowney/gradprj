@@ -8,13 +8,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>未授权</title>
-    <%--<link type="text/css" rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/common.css"/>--%>
+    <title>403</title>
+    <link type="text/css" rel="stylesheet"
+          href="${pageContext.request.contextPath}/resources/bootstrap/css/bootstrap.min.css"/>
     <%--<script type="text/javascript" src="${pageContext.request.contextPath}/resources/js/jquery.js"></script>--%>
 </head>
 <body>
-
-当前地址尚未授权，无法访问。<a href="${pageContext.request.contextPath}/index">回到首页</a>
+<span style="color: red;">当前地址尚未授权或者当前身份状态下无法访问。</span>
+<a class="btn btn-primary" href="${pageContext.request.contextPath}/index">回到首页</a>
 <script type="text/javascript">
 </script>
 </body>
