@@ -75,10 +75,10 @@
         <module.port>80</module.port>
         <!-- 虚拟目录配置，仅使用 IDE 开发时需要用到 -->
         <image.mapping.url>/mapping/image</image.mapping.url>
-        <image.mapping.location>F:/gradprj/image</image.mapping.location>
+        <image.mapping.location>L:/gradprj/image</image.mapping.location>
         <!--<image.mapping.location>/usr/local/gradprj/image</image.mapping.location>-->
         <doc.mapping.url>/mapping/doc</doc.mapping.url>
-        <doc.mapping.location>F:/gradprj/doc</doc.mapping.location>
+        <doc.mapping.location>L:/gradprj/doc</doc.mapping.location>
         <!--<doc.mapping.location>/usr/local/gradprj/doc</doc.mapping.location>-->
         <me.commons.version>1.1</me.commons.version>
         <joor.version>0.9.6</joor.version>
