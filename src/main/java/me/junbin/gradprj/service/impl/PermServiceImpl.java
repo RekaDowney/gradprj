@@ -38,7 +38,7 @@ public class PermServiceImpl implements PermService {
     @Transactional
     @Caching(evict = {@CacheEvict(key = "'permList'")})
     public int insert(Perm perm) {
-        MyValidator.nullThrowsForProperty(perm, "permName", "permPattern", "permType");
+        MyValidator.nullThrowsForProperty(perm, "permName", "permType", "permPattern");
         log.debug("添加新权限{}", perm);
         return permRepo.insert(perm);
     }
@@ -49,7 +49,7 @@ public class PermServiceImpl implements PermService {
     public int batchInsert(List<Perm> permList) {
         Args.notNull(permList);
         for (Perm perm : permList) {
-            MyValidator.nullThrowsForProperty(perm, "permName", "permPattern", "permType");
+            MyValidator.nullThrowsForProperty(perm, "permName", "permType", "permPattern");
         }
         log.debug("批量添加权限{}", permList);
         return permRepo.batchInsert(permList);

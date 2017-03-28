@@ -65,6 +65,7 @@
         <value>roleCache</value>
         <value>permCache</value>
         <value>docCache</value>
+        <value>aflCache</value>
     </util:set>
 
     <util:map id="cacheExpiredTimeMap"
@@ -83,6 +84,8 @@
         <entry key="permCache" value="86400"/>
         <!-- 设置 docCache 的缓存过期时间为 2 小时 -->
         <entry key="docCache" value="7200"/>
+        <!-- 设置 docCache 的缓存过期时间为 2 小时 -->
+        <entry key="aflCache" value="86400"/>
     </util:map>
 
     <!-- defaultExpiration 指定所有 cache 的默认过期时间，单位：秒 -->

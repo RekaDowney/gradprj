@@ -161,7 +161,7 @@
     </select>
 
     <resultMap id="roleMap" type="Role">
-        <id property="id" column="id"/>
+        <id property="id" column="r_id"/>
         <result property="roleName" column="r_roleName"/>
         <result property="roleNameCn" column="r_roleNameCn"/>
         <result property="remarks" column="r_remarks"/>
@@ -200,6 +200,41 @@
         SELECT count(*)
         FROM role_perm
         WHERE role_id = #{id}
+    </select>
+
+    <select id="total" resultType="long">
+        SELECT count(*)
+        FROM role
+        WHERE valid = TRUE
+        <if test="name != null and name != '%%'">
+            AND (role_name LIKE #{name} OR role_name_cn LIKE #{name})
+        </if>
+    </select>
+
+    <!-- 如果关联到 permId 之后将会导致一个严重的问题：行的计数方式不正确 -->
+    <select id="page" resultMap="roleMap">
+        SELECT
+        <include refid="roleColumns">
+            <property name="role" value="r"/>
+        </include>
+        FROM role r
+        WHERE r.valid = TRUE
+        <if test="name != null and name != '%%'">
+            AND (r.role_name LIKE #{name} OR r.role_name_cn LIKE #{name})
+        </if>
+        ORDER BY r.created_time DESC LIMIT #{skip}, #{pageSize}
+    </select>
+
+    <select id="getPermIdList" resultType="String">
+        SELECT perm_id
+        FROM role_perm
+        WHERE role_id = #{roleId};
+    </select>
+
+    <select id="getPermIdWithType" resultType="String">
+        SELECT perm_id
+        FROM role_perm rp LEFT JOIN perm p ON (rp.perm_id = p.id)
+        WHERE role_id = #{roleId} AND p.perm_type = #{permType.displayName}
     </select>
 
 </mapper>

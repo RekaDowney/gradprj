@@ -16,9 +16,11 @@
 
 
     <context:annotation-config/>
-    <context:component-scan base-package="me.junbin.gradprj.repository,me.junbin.gradprj.service,me.junbin.gradprj.listener"/>
+    <context:component-scan
+            base-package="me.junbin.gradprj.repository,me.junbin.gradprj.service,me.junbin.gradprj.listener"/>
 
-    <context:property-placeholder file-encoding="UTF-8" location="classpath:bundle/db.properties"/>
+    <context:property-placeholder file-encoding="UTF-8"
+                                  location="classpath:bundle/db.properties,classpath:bundle/app.properties"/>
 
     <!-- 数据源 -->
     <bean

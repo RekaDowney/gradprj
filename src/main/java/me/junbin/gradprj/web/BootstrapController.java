@@ -4,6 +4,7 @@ import me.junbin.commons.util.Args;
 import me.junbin.gradprj.domain.Account;
 import me.junbin.gradprj.domain.Perm;
 import me.junbin.gradprj.service.CaptchaService;
+import me.junbin.gradprj.util.AccountMgr;
 import me.junbin.gradprj.util.EncryptUtils;
 import me.junbin.gradprj.util.Global;
 import org.apache.commons.lang3.StringUtils;
@@ -123,6 +124,13 @@ public class BootstrapController extends BaseController {
                 return "redirect:/login";
             }
             Account account = (Account) subject.getPrincipal();
+            // 管理非游客账户，此时无须验证（肯定是非游客），因为前面对游客身份的用户已经进行了处理
+            AccountMgr.store(session.getId(), account);
+/*
+            if (!StringUtils.equals(account.getPrincipal(), Global.VISITOR_NAME)) {
+                AccountMgr.store(session.getId(), account);
+            }
+*/
             session.removeAttribute(Global.ERROR_TIME_KEY);
             session.setAttribute(Global.LOGIN_ACCOUNT_KEY, account);
             return "redirect:/index";

@@ -2,30 +2,64 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
        xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd
-        http://www.springframework.org/schema/util
-        http://www.springframework.org/schema/util/spring-util.xsd">
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <!--<context:property-placeholder file-encoding="UTF-8" location="classpath:bundle/app.properties"/>-->
+    <!--<context:property-override file-encoding="UTF-8" location="classpath:bundle/app.properties"/>-->
+    <import resource="classpath:config/applicationContext.xml"/>
+
+
+    <util:list id="listenerList"
+               list-class="java.util.ArrayList"
+               value-type="org.apache.shiro.session.SessionListener">
+        <bean class="me.junbin.gradprj.listener.SessionAccountListener"/>
+    </util:list>
+
+    <bean
+            id="sessionIdGenerator"
+            class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"
+    />
+
+    <bean
+            id="sessionDAO"
+            class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO"
+            p:sessionIdGenerator-ref="sessionIdGenerator"
+    />
+
+    <bean
+            id="sessionManager"
+            class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager"
+            p:deleteInvalidSessions="true"
+            p:sessionListeners-ref="listenerList"
+            p:globalSessionTimeout="${session.time.out}"
+            p:sessionDAO-ref="sessionDAO"
+            p:sessionValidationSchedulerEnabled="true"
+            p:sessionValidationScheduler-ref="sessionValidationScheduler"
+            p:sessionIdCookieEnabled="true"
+            p:sessionIdCookie-ref="sessionIdCookie"
+    />
+
+    <bean
+            id="sessionIdCookie"
+            class="org.apache.shiro.web.servlet.SimpleCookie"
+            p:name="shiroCookie"
+            p:httpOnly="true"
+            p:maxAge="-1"
+    />
 
     <!--
-        <bean
-                id="sessionIdGenerator"
-                class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"
-        />
-
-        <bean
-                id="sessionDAO"
-                class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO"
-                p:sessionIdGenerator-ref="sessionIdGenerator"
-        />
-
         <bean
                 id="sessionManager"
                 class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager"
                 p:deleteInvalidSessions="true"
                 p:globalSessionTimeout="1800000"
-                p:sessionDAO-ref="sessionDAO"
                 p:sessionValidationSchedulerEnabled="true"
                 p:sessionValidationScheduler-ref="sessionValidationScheduler"
                 p:sessionIdCookieEnabled="true"
@@ -34,28 +68,9 @@
     -->
 
     <bean
-            id="sessionIdCookie"
-            class="org.apache.shiro.web.servlet.SimpleCookie"
-            p:name="shiroCookie"
-            p:httpOnly="true"
-            p:maxAge="1800000"
-    />
-
-    <bean
-            id="sessionManager"
-            class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager"
-            p:deleteInvalidSessions="true"
-            p:globalSessionTimeout="1800000"
-            p:sessionValidationSchedulerEnabled="true"
-            p:sessionValidationScheduler-ref="sessionValidationScheduler"
-            p:sessionIdCookieEnabled="true"
-            p:sessionIdCookie-ref="sessionIdCookie"
-    />
-
-    <bean
             id="sessionValidationScheduler"
             class="org.apache.shiro.session.mgt.quartz.QuartzSessionValidationScheduler"
-            p:sessionValidationInterval="1800000"
+            p:sessionValidationInterval="${session.validation.interval}"
             p:sessionManager-ref="sessionManager"
     />
 
@@ -77,16 +92,16 @@
             class="org.apache.shiro.spring.LifecycleBeanPostProcessor"
     />
 
-<!--
-    <bean
-            id="shiroFilter"
-            class="org.apache.shiro.spring.web.ShiroFilterFactoryBean"
-            p:securityManager-ref="securityManager"
-            p:loginUrl="/login"
-            p:unauthorizedUrl="/unauthorized"
-            p:filterChainDefinitionMap-ref="filterChainMap"
-    />
--->
+    <!--
+        <bean
+                id="shiroFilter"
+                class="org.apache.shiro.spring.web.ShiroFilterFactoryBean"
+                p:securityManager-ref="securityManager"
+                p:loginUrl="/login"
+                p:unauthorizedUrl="/unauthorized"
+                p:filterChainDefinitionMap-ref="filterChainMap"
+        />
+    -->
 
     <bean
             id="shiroFilter"

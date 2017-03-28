@@ -9,9 +9,12 @@ import me.junbin.gradprj.domain.Role;
 import me.junbin.gradprj.enumeration.PermType;
 import me.junbin.gradprj.service.AccountService;
 import me.junbin.gradprj.service.PermService;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -47,6 +50,7 @@ public enum Global {
     public static final String COOKIE_NAME = "shiroCookie";
     public static final String LOGIN_ERROR_KEY = "loginError";
     public static final String VISITOR_NAME = "visitor";
+    public static final String REGISTERED_USER_ROLE_NAME = "user";
     public static final String ERROR_TIME_KEY = "errorTime";
     public static final String CAPTCHA_KEY = "kaptcha";
     public static final String ERROR_50X_KEY = "error_50x";
@@ -64,11 +68,16 @@ public enum Global {
     // 如果 JSON.parse(data).status == false，那么需要执行二次解析
     public static final String STATUS_OK = "success";
     public static final String STATUS_ERROR = "error";
+    public static final int DOC_EDIT_TIME_SLICE;
+    public static final int DEFAULT_PAGE_SIZE;
+    public static final String DEFAULT_PASSWORD = "123456";
 
     static {
         DOC_PREFIX_URL = kvTranslator.getAsString("doc.mapping.url");
         IMAGE_PREFIX_URL = kvTranslator.getAsString("image.mapping.url");
         KAPTCHA_SESSION_KEY = kvTranslator.getAsString("kaptcha.session.key");
+        DOC_EDIT_TIME_SLICE = kvTranslator.getAsInt("default.edit.slice");
+        DEFAULT_PAGE_SIZE = kvTranslator.getAsInt("default.page.size");
         if (SystemUtils.IS_OS_WINDOWS) {
             DOC_LOCATION = kvTranslator.getAsString("windows.doc.mapping.location");
             IMAGE_LOCATION = kvTranslator.getAsString("windows.image.mapping.location");
@@ -178,6 +187,10 @@ public enum Global {
         return VISITOR_NAME;
     }
 
+    public static String getRegisteredUserRoleName() {
+        return REGISTERED_USER_ROLE_NAME;
+    }
+
     private static final class VisitorHolder {
         private static final Account VISITOR;
 
@@ -201,7 +214,9 @@ public enum Global {
             visitor.setRelationPermList(RelationResolver.relationalize(menu));
 
             VISITOR = visitor;
-            AccountMgr.store(visitor);
+
+            // 不存储，直接由 AccountMgr 直接更新
+            // AccountMgr.store(visitor);
         }
     }
 
@@ -217,9 +232,10 @@ public enum Global {
             CATEGORY_MENU = new ArrayList<>();
             PermService permService = WebAppCtxHolder.getBean(PermService.class);
             List<Perm> permList = permService.selectAll();
-            RelationResolver.relationalize(permList);
+            permList = RelationResolver.relationalize(permList);
             Optional<Perm> perm = permList.stream().filter(p -> p.getPermName().equals("分类文档")).findFirst();
             assert perm.isPresent();
+            //CATEGORY_TREE = getCategoryMenuTree(Collections.singletonList(perm.get()));
             Queue<Perm> permQueue = new ArrayDeque<>();
             permQueue.add(perm.get());
             Perm p;
@@ -229,21 +245,51 @@ public enum Global {
                     permQueue.addAll(p.getSub());
             }
 
-            CATEGORY_TREE = new ArrayList<>(CATEGORY_MENU.size());
-            JsonObject category;
-            for (Perm menu : CATEGORY_MENU) {
-                category = new JsonObject();
-                category.addProperty("id", menu.getId());
-                category.addProperty("name", menu.getPermName());
-                category.addProperty("parentId", menu.getParentId());
-                if (menu.isAttachable()) {
-                    category.addProperty("attachable", true);
-                } else {
-                    category.addProperty("open", true);
-                }
-                CATEGORY_TREE.add(category);
-            }
+            CATEGORY_TREE = CATEGORY_MENU.stream()
+                                         .map(Global::permMenuAsTreeNode)
+                                         .collect(Collectors.toList());
         }
+    }
+
+    /**
+     * 根据权限树获取栏目树
+     *
+     * @param relationalPermList 权限树，必须是子级相关的，即父子关系是正常的而不是独立的（此时子级元素都放在 {@link Perm#sub}）中
+     *                           //* @param ignoreCategory     是否忽略分类文档这个栏目，默认该栏目为根，如果忽略则根变为该栏目的直接子级栏目
+     * @return 栏目树
+     */
+    public static List<JsonObject> getCategoryMenuTree(List<Perm> relationalPermList) {
+        Optional<Perm> perm = relationalPermList.stream().filter(p -> p.getPermName().equals("分类文档")).findFirst();
+        String id = null;
+        if (perm.isPresent()) {
+            Queue<Perm> permQueue = new ArrayDeque<>();
+            Perm root = perm.get();
+            id = root.getId();
+            permQueue.add(root);
+            Perm p;
+            List<Perm> menu = new ArrayList<>();
+            while ((p = permQueue.poll()) != null) {
+/*
+                if (!ignoreCategory) {
+                    menu.add(p);
+                }
+*/
+                menu.add(p);
+                if (p.getSub() != null)
+                    permQueue.addAll(p.getSub());
+            }
+/*
+            if (ignoreCategory) {
+                for (Perm node : menu) {
+                    if (StringUtils.equals(node.getParentId(), id)) {
+                        node.setParentId(null);
+                    }
+                }
+            }
+*/
+            return menu.stream().map(Global::permMenuAsTreeNode).collect(Collectors.toList());
+        }
+        return null;
     }
 
     public static List<Perm> getCategoryMenu() {
@@ -252,6 +298,93 @@ public enum Global {
 
     public static List<JsonObject> getCategoryTree() {
         return CategoryHolder.CATEGORY_TREE;
+    }
+
+    public static JsonObject permMenuAsTreeNode(Perm menu) {
+        return copyPermMenuAsTreeNode(menu, new JsonObject());
+    }
+
+    public static JsonObject copyPermMenuAsTreeNode(Perm menu, JsonObject category) {
+        category.addProperty("id", menu.getId());
+        category.addProperty("name", menu.getPermName());
+        category.addProperty("parentId", menu.getParentId());
+        if (menu.isAttachable()) {
+            category.addProperty("attachable", true);
+        } else {
+            category.addProperty("isParent", true);
+            category.addProperty("open", true);
+        }
+        return category;
+    }
+
+    /**
+     * 添加栏目到全局的栏目列表和栏目树
+     *
+     * @param category 栏目
+     * @return 添加成功与否
+     */
+    public static boolean addCategory(Perm category) {
+        return Global.getCategoryMenu().add(category) &&
+                Global.getCategoryTree().add(Global.permMenuAsTreeNode(category));
+    }
+
+    /**
+     * 将指定栏目从全局的栏目列表和栏目树中删除（如果存在的话）
+     *
+     * @param category 栏目
+     */
+    public static void removeCategory(Perm category) {
+        String categoryId = category.getId();
+
+        List<Perm> menuList = Global.getCategoryMenu();
+        Iterator<Perm> menuIterator = menuList.iterator();
+        Perm menu;
+        while (menuIterator.hasNext()) {
+            menu = menuIterator.next();
+            if (StringUtils.equals(menu.getId(), categoryId)) {
+                menuIterator.remove();
+            }
+        }
+
+        List<JsonObject> tree = Global.getCategoryTree();
+        Iterator<JsonObject> treeIterator = tree.iterator();
+        JsonObject node;
+        while (treeIterator.hasNext()) {
+            node = treeIterator.next();
+            if (StringUtils.equals(node.get("id").getAsString(), categoryId)) {
+                treeIterator.remove();
+            }
+        }
+    }
+
+    /**
+     * 从全局的栏目列表和栏目树中更新指定栏目
+     *
+     * @param category 栏目
+     */
+    public static void updateCategory(Perm category) {
+        String id = category.getId();
+        Global.getCategoryMenu().stream().parallel()
+              .filter(p -> StringUtils.equals(p.getId(), id))
+              .findFirst()
+              .ifPresent(p -> {
+                  try {
+                      BeanUtils.copyProperties(p, category);
+                  } catch (IllegalAccessException | InvocationTargetException e) {
+                      e.printStackTrace();
+                  }
+              });
+        Global.getCategoryTree().stream().parallel()
+              .filter(node -> StringUtils.equals(node.get("id").getAsString(), id))
+              .findFirst()
+              .ifPresent(node -> copyPermMenuAsTreeNode(category, node));
+    }
+
+    public static String toLike(String column) {
+        if (StringUtils.isEmpty(column)) {
+            return "%%";
+        }
+        return '%' + column + '%';
     }
 
 }

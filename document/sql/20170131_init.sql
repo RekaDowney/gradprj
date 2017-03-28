@@ -236,6 +236,24 @@ CREATE TABLE document_newest (
   DEFAULT CHARSET = UTF8
   COMMENT = '最新入库文档表';
 
+
+DROP TABLE IF EXISTS ask_for_leave;
+CREATE TABLE ask_for_leave (
+  id            CHAR(32)   NOT NULL  PRIMARY KEY
+  COMMENT 'UUID 主键',
+  doc_url       VARCHAR(200) COMMENT '请假条相对于webapp/doc/mapping/askForLeave的路径，包含后缀名，文档名称为id值',
+  doc_name      VARCHAR(200) COMMENT '请假条原始名称，格式为：yyyy年MM月dd日请假条，包含后缀名',
+  doc_type      VARCHAR(20) COMMENT '请假条类型，枚举',
+  creator       CHAR(32) COMMENT '请假条上传者，关联到account.id',
+  created_time  DATETIME COMMENT '请假条上传时间',
+  modifier      CHAR(32) COMMENT '请假条修改者，关联到account.id',
+  modified_time DATETIME COMMENT '请假条修改时间',
+  distributed   TINYINT(1) NOT NULL DEFAULT 0
+  COMMENT '请假条是否已分发，分发后不可以修改',
+  valid         TINYINT(1) NOT NULL DEFAULT 1
+  COMMENT '请假条是否有效；1代表有效，0代表失效（即已删除）'
+);
+
 -- 触发器，用来维护 document_newest 表，后台对该表仅仅存在 SELECT 操作，不可以增删改该表，增删改操作由触发器维护
 DROP TRIGGER IF EXISTS trigger_on_insert_document;
 DELIMITER $$
@@ -326,6 +344,8 @@ FOR EACH ROW
     DECLARE user_id CHAR(32);
     SET user_id := new.id;
     INSERT INTO user (id, portrait) VALUES (user_id, 'f3e5ac311d8d4b6bacff05383351470d');
+    # 所有用户默认授予注册用户权限
+    INSERT INTO account_role (account_id, role_id) VALUES (user_id, '85d4eb03bc3b407e93a447ee5e27d4c4');
   END$$
 DELIMITER ;
 
@@ -363,9 +383,11 @@ INSERT INTO role (id, role_name, role_name_cn, remarks, creator, created_time, m
 VALUES ('4cee7a676d984191a0ab89cf679a55a1', 'admin', '管理员', '管理员拥有系统大部分权限，可以进入后台管理', 'd7ff797575604fd1b9960ab10c30d668',
         '2017-02-20 21:49:09', NULL, NULL, TRUE, TRUE);
 -- 主人
+/*
 INSERT INTO role (id, role_name, role_name_cn, remarks, creator, created_time, modifier, modified_time, active, valid)
 VALUES ('b763e366db0e40bb8c3101227b080821', 'master', '主人', '主人拥有系统所有功能，在后台管理中可以进行更多功能操作',
         'd7ff797575604fd1b9960ab10c30d668', '2017-02-20 21:49:09', NULL, NULL, TRUE, TRUE);
+*/
 
 -- @@ 权限
 -- 管理类
@@ -410,21 +432,23 @@ INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, w
 VALUES ('43b9d6210cd64e7a84bd2cc33aa01649', '文档编辑', NULL, 'doc:*:edit', '功能类', NULL, 200,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
         TRUE);
+/*
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
 VALUES ('bf135b028d344c688f98e9745deaa26c', '文档格式转换', NULL, 'doc:*:transfer', '功能类', NULL, 200,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
         TRUE);
+*/
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
 VALUES ('8a76458cbdf4416896e995aee25a6558', '请假', NULL, 'ask:for:leave', '功能类', NULL, 200,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
         TRUE);
-
--- 菜单类
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
 VALUES ('fce10205237e4774840b171d44d3c416', '最新入库', '/doc/latest', 'channel:*:latest',
-                                            '菜单类', NULL, 10,
+                                            '功能类', NULL, 10,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
         TRUE);
+
+-- 菜单类
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
 VALUES ('1d4b1455eef54443a01dd77468225f52', '分类文档', '/doc/page', 'channel:*:category', '菜单类', NULL, 20,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:19', FALSE, TRUE,
@@ -494,6 +518,7 @@ VALUES
   ('ba72dc0eeffe4d53b37f39bb5f7dd62e', '林学院', NULL, 'category:forestry', '菜单类', '1d4b1455eef54443a01dd77468225f52', 30,
                                        'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:20', FALSE, TRUE, TRUE);
 
+/*
 INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, weight, creator, created_time, attachable, active, valid)
 VALUES ('ce36470d5c6a49f48a3a29b6868ebb24', '优质文档', '/doc/excellence', 'channel:*:excellence', '菜单类', NULL, 30,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:20', FALSE, TRUE,
@@ -502,6 +527,7 @@ INSERT INTO perm (id, perm_name, perm_url, perm_pattern, perm_type, parent_id, w
 VALUES ('4173c83dae5e437b9aacb1b995dfe311', '关于本站', '/about', 'channel:*:aboutUs', '菜单类', NULL, 40,
                                             'd7ff797575604fd1b9960ab10c30d668', '2017-02-21 20:36:20', FALSE, TRUE,
         TRUE);
+*/
 -- 角色授权，目前四大类角色：游客，注册用户，管理员，主人
 INSERT INTO role_perm (role_id, perm_id)
 VALUES ('b0b8a48302f44b68b613409c312a1f4e', '1461e4cd3ec84ec68bdcc4c544af0597'),
@@ -509,14 +535,12 @@ VALUES ('b0b8a48302f44b68b613409c312a1f4e', '1461e4cd3ec84ec68bdcc4c544af0597'),
   ('b0b8a48302f44b68b613409c312a1f4e', '21b22dfac3b84f179428375345a96eab'),
   ('b0b8a48302f44b68b613409c312a1f4e', '2d270deadc544187a7234cc2d21215e6'),
   ('b0b8a48302f44b68b613409c312a1f4e', '37826d7fb34b471f8643f6945ab582fe'),
-  ('b0b8a48302f44b68b613409c312a1f4e', '4173c83dae5e437b9aacb1b995dfe311'),
   ('b0b8a48302f44b68b613409c312a1f4e', '4621a7fb843f4398b6e5af0f349bccd3'),
   ('b0b8a48302f44b68b613409c312a1f4e', '7c8cf9e601344bb98cd8b5b610d08549'),
   ('b0b8a48302f44b68b613409c312a1f4e', '9d5ad5ceb3d54a1d89f0cade4d4806f9'),
   ('b0b8a48302f44b68b613409c312a1f4e', '9d996cd154f74d459d0c2a44b8b68bef'),
   ('b0b8a48302f44b68b613409c312a1f4e', 'b9a5c1880e4e4abf96483842544af502'),
   ('b0b8a48302f44b68b613409c312a1f4e', 'ba72dc0eeffe4d53b37f39bb5f7dd62e'),
-  ('b0b8a48302f44b68b613409c312a1f4e', 'ce36470d5c6a49f48a3a29b6868ebb24'),
   ('b0b8a48302f44b68b613409c312a1f4e', 'dc34a2cbf05840e0b457d9d17b648243'),
   ('b0b8a48302f44b68b613409c312a1f4e', 'e56689b586ff495fa4bf66f73aa4b9f6'),
   ('b0b8a48302f44b68b613409c312a1f4e', 'e61fe8e97b294e9287416fefb04b7cec'),
@@ -529,14 +553,12 @@ VALUES ('85d4eb03bc3b407e93a447ee5e27d4c4', '1461e4cd3ec84ec68bdcc4c544af0597'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', '21b22dfac3b84f179428375345a96eab'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', '2d270deadc544187a7234cc2d21215e6'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', '37826d7fb34b471f8643f6945ab582fe'),
-  ('85d4eb03bc3b407e93a447ee5e27d4c4', '4173c83dae5e437b9aacb1b995dfe311'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', '4621a7fb843f4398b6e5af0f349bccd3'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', '7c8cf9e601344bb98cd8b5b610d08549'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', '9d5ad5ceb3d54a1d89f0cade4d4806f9'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', '9d996cd154f74d459d0c2a44b8b68bef'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', 'b9a5c1880e4e4abf96483842544af502'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', 'ba72dc0eeffe4d53b37f39bb5f7dd62e'),
-  ('85d4eb03bc3b407e93a447ee5e27d4c4', 'ce36470d5c6a49f48a3a29b6868ebb24'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', 'dc34a2cbf05840e0b457d9d17b648243'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', 'e56689b586ff495fa4bf66f73aa4b9f6'),
   ('85d4eb03bc3b407e93a447ee5e27d4c4', 'e61fe8e97b294e9287416fefb04b7cec'),
@@ -549,40 +571,18 @@ VALUES ('4cee7a676d984191a0ab89cf679a55a1', '1461e4cd3ec84ec68bdcc4c544af0597'),
   ('4cee7a676d984191a0ab89cf679a55a1', '21b22dfac3b84f179428375345a96eab'),
   ('4cee7a676d984191a0ab89cf679a55a1', '2d270deadc544187a7234cc2d21215e6'),
   ('4cee7a676d984191a0ab89cf679a55a1', '37826d7fb34b471f8643f6945ab582fe'),
-  ('4cee7a676d984191a0ab89cf679a55a1', '4173c83dae5e437b9aacb1b995dfe311'),
   ('4cee7a676d984191a0ab89cf679a55a1', '4621a7fb843f4398b6e5af0f349bccd3'),
   ('4cee7a676d984191a0ab89cf679a55a1', '7c8cf9e601344bb98cd8b5b610d08549'),
   ('4cee7a676d984191a0ab89cf679a55a1', '9d5ad5ceb3d54a1d89f0cade4d4806f9'),
   ('4cee7a676d984191a0ab89cf679a55a1', '9d996cd154f74d459d0c2a44b8b68bef'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'b9a5c1880e4e4abf96483842544af502'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'ba72dc0eeffe4d53b37f39bb5f7dd62e'),
-  ('4cee7a676d984191a0ab89cf679a55a1', 'ce36470d5c6a49f48a3a29b6868ebb24'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'dc34a2cbf05840e0b457d9d17b648243'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'e56689b586ff495fa4bf66f73aa4b9f6'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'e61fe8e97b294e9287416fefb04b7cec'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'eaedb90bf2854530b137533e1aee25e7'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'f654d8ecc5fc43be83b660d50dce499c'),
   ('4cee7a676d984191a0ab89cf679a55a1', 'fce10205237e4774840b171d44d3c416');
-INSERT INTO role_perm (role_id, perm_id)
-VALUES ('b763e366db0e40bb8c3101227b080821', '1461e4cd3ec84ec68bdcc4c544af0597'),
-  ('b763e366db0e40bb8c3101227b080821', '1d4b1455eef54443a01dd77468225f52'),
-  ('b763e366db0e40bb8c3101227b080821', '21b22dfac3b84f179428375345a96eab'),
-  ('b763e366db0e40bb8c3101227b080821', '2d270deadc544187a7234cc2d21215e6'),
-  ('b763e366db0e40bb8c3101227b080821', '37826d7fb34b471f8643f6945ab582fe'),
-  ('b763e366db0e40bb8c3101227b080821', '4173c83dae5e437b9aacb1b995dfe311'),
-  ('b763e366db0e40bb8c3101227b080821', '4621a7fb843f4398b6e5af0f349bccd3'),
-  ('b763e366db0e40bb8c3101227b080821', '7c8cf9e601344bb98cd8b5b610d08549'),
-  ('b763e366db0e40bb8c3101227b080821', '9d5ad5ceb3d54a1d89f0cade4d4806f9'),
-  ('b763e366db0e40bb8c3101227b080821', '9d996cd154f74d459d0c2a44b8b68bef'),
-  ('b763e366db0e40bb8c3101227b080821', 'b9a5c1880e4e4abf96483842544af502'),
-  ('b763e366db0e40bb8c3101227b080821', 'ba72dc0eeffe4d53b37f39bb5f7dd62e'),
-  ('b763e366db0e40bb8c3101227b080821', 'ce36470d5c6a49f48a3a29b6868ebb24'),
-  ('b763e366db0e40bb8c3101227b080821', 'dc34a2cbf05840e0b457d9d17b648243'),
-  ('b763e366db0e40bb8c3101227b080821', 'e56689b586ff495fa4bf66f73aa4b9f6'),
-  ('b763e366db0e40bb8c3101227b080821', 'e61fe8e97b294e9287416fefb04b7cec'),
-  ('b763e366db0e40bb8c3101227b080821', 'eaedb90bf2854530b137533e1aee25e7'),
-  ('b763e366db0e40bb8c3101227b080821', 'f654d8ecc5fc43be83b660d50dce499c'),
-  ('b763e366db0e40bb8c3101227b080821', 'fce10205237e4774840b171d44d3c416');
 INSERT INTO role_perm (role_id, perm_id)
 VALUES ('b0b8a48302f44b68b613409c312a1f4e', '0445ba623d534ec2878801c252a86d1a');
 INSERT INTO role_perm (role_id, perm_id)
@@ -597,33 +597,21 @@ VALUES ('4cee7a676d984191a0ab89cf679a55a1', '0445ba623d534ec2878801c252a86d1a'),
   ('4cee7a676d984191a0ab89cf679a55a1', '67eb917edb9f4b60b353612553ea61a0'),
   ('4cee7a676d984191a0ab89cf679a55a1', '940be8feb63d44c6b018641883ae7255'),
   ('4cee7a676d984191a0ab89cf679a55a1', '97a32f2cb13e4f1386e3fabc7711a07a'),
-  ('4cee7a676d984191a0ab89cf679a55a1', 'bf135b028d344c688f98e9745deaa26c'),
   ('4cee7a676d984191a0ab89cf679a55a1', '8a76458cbdf4416896e995aee25a6558');
-INSERT INTO role_perm (role_id, perm_id)
-VALUES ('b763e366db0e40bb8c3101227b080821', '0445ba623d534ec2878801c252a86d1a'),
-  ('b763e366db0e40bb8c3101227b080821', '43b9d6210cd64e7a84bd2cc33aa01649'),
-  ('b763e366db0e40bb8c3101227b080821', '67eb917edb9f4b60b353612553ea61a0'),
-  ('b763e366db0e40bb8c3101227b080821', '940be8feb63d44c6b018641883ae7255'),
-  ('b763e366db0e40bb8c3101227b080821', '97a32f2cb13e4f1386e3fabc7711a07a'),
-  ('b763e366db0e40bb8c3101227b080821', 'bf135b028d344c688f98e9745deaa26c'),
-  ('b763e366db0e40bb8c3101227b080821', '8a76458cbdf4416896e995aee25a6558');
 INSERT INTO role_perm (role_id, perm_id)
 VALUES ('4cee7a676d984191a0ab89cf679a55a1', '829d8bd064a8422c8e84b1c695cd582f'),
   ('4cee7a676d984191a0ab89cf679a55a1', '421bd40c477e41edb4424e67628b88ff'),
   ('4cee7a676d984191a0ab89cf679a55a1', '4e2b2a20451747938cbb1af202be92ea');
-INSERT INTO role_perm (role_id, perm_id)
-VALUES ('b763e366db0e40bb8c3101227b080821', '829d8bd064a8422c8e84b1c695cd582f'),
-  ('b763e366db0e40bb8c3101227b080821', '421bd40c477e41edb4424e67628b88ff'),
-  ('b763e366db0e40bb8c3101227b080821', '4e2b2a20451747938cbb1af202be92ea');
 
 INSERT INTO role_perm (role_id, perm_id) VALUES
-  ('4cee7a676d984191a0ab89cf679a55a1', 'e8007ad580f340ffb93535de1b608a0a'),
-  ('b763e366db0e40bb8c3101227b080821', 'e8007ad580f340ffb93535de1b608a0a');
+  ('4cee7a676d984191a0ab89cf679a55a1', 'e8007ad580f340ffb93535de1b608a0a');
 
--- 授予用户角色，通用用户：visitor，至高用户：system
+-- 授予用户角色，通用用户：visitor，系统用户：system
 INSERT INTO account_role (account_id, role_id)
-VALUES ('d7ff797575604fd1b9960ab10c30d668', 'b763e366db0e40bb8c3101227b080821');
+VALUES ('d7ff797575604fd1b9960ab10c30d668', '4cee7a676d984191a0ab89cf679a55a1'); -- System
 INSERT INTO account_role (account_id, role_id)
-VALUES ('9cf78b0ed096438bbc0f45a7fc8cfd0c', 'b0b8a48302f44b68b613409c312a1f4e');
+VALUES ('9cf78b0ed096438bbc0f45a7fc8cfd0c', 'b0b8a48302f44b68b613409c312a1f4e'); -- 游客
 INSERT INTO account_role (account_id, role_id)
-VALUES ('93f6787ea384402bbb9503caef8c5765', '4cee7a676d984191a0ab89cf679a55a1');
+VALUES ('93f6787ea384402bbb9503caef8c5765', '4cee7a676d984191a0ab89cf679a55a1'); -- 管理员
+DELETE FROM account_role
+WHERE account_id = '9cf78b0ed096438bbc0f45a7fc8cfd0c' AND role_id = '85d4eb03bc3b407e93a447ee5e27d4c4';

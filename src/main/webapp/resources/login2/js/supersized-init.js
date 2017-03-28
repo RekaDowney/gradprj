@@ -20,10 +20,10 @@ jQuery(function($){
         // Components
         slide_links        : 'blank',    // Individual links for each slide (Options: false, 'num', 'name', 'blank')
         slides             : [    // Slideshow Images
-                                 // 路径采用相对于 Webapp 的绝对路径
-                                 {image : '/resources/login2/img/backgrounds/1.jpg'},
-                                 {image : '/resources/login2/img/backgrounds/2.jpg'},
-                                 {image : '/resources/login2/img/backgrounds/3.jpg'}
+                                 // 开头不加 / 表示相对于 scheme://serverHost:serverPort/ctx 路径，开头加上 / 则相对于 scheme://serverHost:serverPort
+                                 {image : 'resources/login2/img/backgrounds/1.jpg'},
+                                 {image : 'resources/login2/img/backgrounds/2.jpg'},
+                                 {image : 'resources/login2/img/backgrounds/3.jpg'}
                              ]
 
     });

@@ -141,7 +141,7 @@
         <include refid="me.junbin.gradprj.repository.UserRepo.userColumns">
             <property name="user" value="u"/>
         </include>
-        FROM account a LEFT JOIN user u ON(a.id = u.id) AND a.valid = TRUE
+        FROM account a LEFT JOIN user u ON(a.id = u.id) WHERE a.valid = TRUE
     </select>
 
     <select id="acquireRoles" resultMap="me.junbin.gradprj.repository.RoleRepo.rolePermIdMap">
@@ -186,5 +186,31 @@
                 resultMap="me.junbin.gradprj.repository.UserRepo.userMap"
         />
     </resultMap>
+
+    <select id="total" resultType="long">
+        SELECT count(*)
+        FROM account
+        WHERE valid = TRUE
+        <if test="principal != null and principal != '%%'">
+            AND principal LIKE #{principal}
+        </if>
+    </select>
+
+    <select id="page" resultMap="accountUserMap">
+        SELECT
+        <include refid="accountColumns">
+            <property name="account" value="a"/>
+        </include>
+        ,
+        <include refid="me.junbin.gradprj.repository.UserRepo.userColumns">
+            <property name="user" value="u"/>
+        </include>
+        FROM account a LEFT JOIN user u ON(a.id = u.id)
+        WHERE a.valid = TRUE
+        <if test="principal != null and principal != '%%'">
+            AND a.principal LIKE #{principal}
+        </if>
+        ORDER BY a.created_time DESC LIMIT #{skip}, #{pageSize}
+    </select>
 
 </mapper>

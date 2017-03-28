@@ -1,6 +1,8 @@
 package me.junbin.gradprj.service;
 
 
+import me.junbin.commons.page.Page;
+import me.junbin.commons.page.PageRequest;
 import me.junbin.gradprj.domain.Account;
 import me.junbin.gradprj.domain.Role;
 
@@ -31,4 +33,9 @@ public interface AccountService extends BaseService<Account, String> {
     Account selectByPrincipal(String principal);
 
     List<Role> acquireRoles(String accountId);
+
+    Page<Account> page(PageRequest pageRequest);
+
+    Page<Account> page(String principal, PageRequest pageRequest);
+
 }

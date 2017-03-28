@@ -22,8 +22,21 @@
 
     <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/css/common.css"/>
     <script type="text/javascript" src="${baseUrl}/resources/js/jquery.js"></script>
-    <link type="text/css" rel="stylesheet" href="${baseUrl}/resources/tip/popupTip.css"/>
-    <script type="text/javascript" src="${baseUrl}/resources/tip/popupTip.js"></script>
+    <script type="text/javascript" src="${baseUrl}/resources/layer/layer.js"></script>
+    <%--<link type="text/css" rel="stylesheet" href="${baseUrl}/resources/tip/popupTip.css"/>--%>
+    <%--<script type="text/javascript" src="${baseUrl}/resources/tip/popupTip.js"></script>--%>
+    <style type="text/css">
+        .layui-layer-dialog .layui-layer-content {
+            padding: 15px;
+            line-height: 0;
+        }
+
+        .msg-success {
+            color: #fff;
+            background-color: #5cb85c;
+            border-color: #4cae4c;
+        }
+    </style>
 </head>
 <body>
 <div style="width: 100%;height: 95%;">
@@ -42,7 +55,12 @@
 
     function saveFile() {
         doc.WebSave();
-        Tip.success("保存成功！");
+        doc.Alert('保存成功');
+//        Tip.success("保存成功！");
+        layer.msg('保存成功', {
+            offset: 'rb',
+            skin: 'msg-success'
+        });
     }
 
     /*

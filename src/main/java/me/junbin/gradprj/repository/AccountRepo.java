@@ -83,4 +83,11 @@ public interface AccountRepo extends BaseRepo<Account, String> {
 
     List<Role> acquireRoles(@Param("accountId") String accountId);
 
+    long total(@Param("principal") String principal);
+
+    List<Account> page(@Param("skip") int skip,
+                       @Param("pageSize") int pageSize,
+                       @Param("principal") String principal);
+
+
 }

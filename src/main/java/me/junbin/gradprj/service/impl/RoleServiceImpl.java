@@ -1,9 +1,13 @@
 package me.junbin.gradprj.service.impl;
 
+import me.junbin.commons.page.Page;
+import me.junbin.commons.page.PageRequest;
 import me.junbin.commons.util.Args;
 import me.junbin.gradprj.domain.Role;
+import me.junbin.gradprj.enumeration.PermType;
 import me.junbin.gradprj.repository.RoleRepo;
 import me.junbin.gradprj.service.RoleService;
+import me.junbin.gradprj.util.Global;
 import me.junbin.gradprj.util.validate.MyValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,6 +40,7 @@ public class RoleServiceImpl implements RoleService {
     @Autowired
     private RoleRepo roleRepo;
     private static final Logger log = LoggerFactory.getLogger(RoleServiceImpl.class);
+    private static final List<Role> emptyRoleList = Collections.emptyList();
 
 /*
     @PostConstruct
@@ -208,6 +214,59 @@ public class RoleServiceImpl implements RoleService {
         Args.notNull(id);
         log.debug("强制刷新id为{}的角色信息", id);
         return roleRepo.selectById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getPermIdList(String roleId) {
+        return roleRepo.getPermIdList(roleId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> getCategoryPermId(String roleId) {
+        return roleRepo.getPermIdWithType(roleId, PermType.MENU);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Role> page(PageRequest pageRequest) {
+        RoleService proxy = (RoleService) AopContext.currentProxy();
+        return proxy.page(null, pageRequest);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Role> page(String name, PageRequest pageRequest) {
+        MyValidator.nullThrows(pageRequest);
+        int pageOffset = pageRequest.getPageOffset();
+        int pageSize = pageRequest.getPageSize();
+        String nameLike = Global.toLike(name);
+        long total = roleRepo.total(nameLike);
+        if (total == 0) {
+            log.debug("没有任何名称中包含{}的记录", name);
+            return new Page.Builder<>(pageRequest, total, emptyRoleList).create();
+        }
+        log.debug("名称中包含{}的角色共有{}条记录", name, total);
+        int skip = pageOffset * pageSize;
+        if (skip >= total) {
+            log.debug("查询所跳过的记录数{}大于等于实际总记录数{}", skip, total);
+            return new Page.Builder<>(pageRequest, total, emptyRoleList).create();
+        }
+        log.debug("查询名称中包含{}，第{}页（每页{}条记录）的记录", name, pageOffset + 1, pageSize);
+        List<Role> content = roleRepo.page(skip, pageSize, nameLike);
+
+/*
+        if (CollectionUtils.notEmpty(content)) {
+            RoleService proxy = (RoleService) AopContext.currentProxy();
+            log.debug("拼接角色所关联到的权限ID列表");
+            for (Role role : content) {
+                log.debug("获取角色{}的权限ID列表", role.getId());
+                role.setPermIdList(proxy.getPermIdList(role.getId()));
+            }
+        }
+*/
+        return new Page.Builder<>(pageRequest, total, content).create();
     }
 
     @Override
