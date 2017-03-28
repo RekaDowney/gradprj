@@ -33,7 +33,7 @@ public abstract class AccountMgr {
     public static Account getByAccountId(String accountId) {
         Args.notNull(accountId);
         for (Pair<String, Account> pair : manager.values()) {
-            if (StringUtils.equals(pair.getKey(), accountId)) {
+            if (pair != null && StringUtils.equals(pair.getKey(), accountId)) {
                 return pair.getValue();
             }
         }

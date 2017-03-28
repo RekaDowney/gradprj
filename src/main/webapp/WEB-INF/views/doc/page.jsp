@@ -274,6 +274,10 @@
         (function () {
             var tree = $.fn.zTree.getZTreeObj("categoryMenu");
             var node = tree.getNodeByParam('id', "${category.id}");
+            // 处理用户在登陆状态下权限被修改之后导致节点丢失的问题
+            if (node == null) {
+                node = tree.getNodesByParam('isParent', true)[0];
+            }
             tree.selectNode(node);
             // 设置上传到本栏目的按钮链接
             $("#upload").attr('href', "${baseUrl}/doc/" + node.id + "/upload");
