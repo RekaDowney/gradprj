@@ -1,10 +1,13 @@
 package me.junbin.gradprj.service.impl;
 
+import me.junbin.commons.page.Page;
+import me.junbin.commons.page.PageRequest;
 import me.junbin.commons.util.Args;
 import me.junbin.gradprj.domain.Account;
 import me.junbin.gradprj.domain.Role;
 import me.junbin.gradprj.repository.AccountRepo;
 import me.junbin.gradprj.service.AccountService;
+import me.junbin.gradprj.util.Global;
 import me.junbin.gradprj.util.validate.MyValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,6 +38,7 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private AccountRepo accountRepo;
     private static final Logger log = LoggerFactory.getLogger(AccountServiceImpl.class);
+    private static final List<Account> emptyAccountList = Collections.emptyList();
 
     @Override
     @Transactional
@@ -192,6 +197,38 @@ public class AccountServiceImpl implements AccountService {
         Args.notNull(accountId);
         log.debug("获取账户{}的所有角色", accountId);
         return accountRepo.acquireRoles(accountId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Account> page(PageRequest pageRequest) {
+        // RoleService 可以，然后 AccountService 竟然出现 ClassCastException
+        //  me.junbin.gradprj.web.BackendController$$EnhancerBySpringCGLIB$$217722dd cannot be cast to me.junbin.gradprj.service.AccountService
+        AccountService proxy = (AccountService) AopContext.currentProxy();
+        return proxy.page(null, pageRequest);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Account> page(String principal, PageRequest pageRequest) {
+        MyValidator.nullThrows(pageRequest);
+        int pageOffset = pageRequest.getPageOffset();
+        int pageSize = pageRequest.getPageSize();
+        String nameLike = Global.toLike(principal);
+        long total = accountRepo.total(nameLike);
+        if (total == 0) {
+            log.debug("没有任何名称中包含{}的记录", principal);
+            return new Page.Builder<>(pageRequest, total, emptyAccountList).create();
+        }
+        log.debug("名称中包含{}的账户共有{}条记录", principal, total);
+        int skip = pageOffset * pageSize;
+        if (skip >= total) {
+            log.debug("查询所跳过的记录数{}大于等于实际总记录数{}", skip, total);
+            return new Page.Builder<>(pageRequest, total, emptyAccountList).create();
+        }
+        log.debug("查询名称中包含{}，第{}页（每页{}条记录）的记录", principal, pageOffset + 1, pageSize);
+        List<Account> content = accountRepo.page(skip, pageSize, nameLike);
+        return new Page.Builder<>(pageRequest, total, content).create();
     }
 
 }

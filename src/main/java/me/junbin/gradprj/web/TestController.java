@@ -1,9 +1,13 @@
 package me.junbin.gradprj.web;
 
+import com.zhuozhengsoft.pageoffice.PageOfficeCtrl;
+import com.zhuozhengsoft.pageoffice.PageOfficeLink;
 import me.junbin.gradprj.domain.Account;
+import me.junbin.gradprj.enumeration.DocumentType;
 import me.junbin.gradprj.enumeration.MyGsonor;
 import me.junbin.gradprj.service.AccountService;
 import me.junbin.gradprj.service.RoleService;
+import me.junbin.gradprj.util.DocumentUtils;
 import me.junbin.gradprj.util.Global;
 import me.junbin.gradprj.util.WebAppCtxHolder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -21,7 +26,7 @@ import javax.servlet.http.HttpSession;
  */
 @Controller
 @RequestMapping("/test")
-public class TestController extends BaseController {
+public class TestController extends BasePoController {
 
     @Autowired
     private AccountService accountService;
@@ -57,6 +62,29 @@ public class TestController extends BaseController {
         RuntimeException r = new RuntimeException("Test");
         session.setAttribute(Global.ERROR_50X_KEY, r);
         return "test";
+    }
+
+    @RequestMapping(value = "/write", method = RequestMethod.GET)
+    public String write(Model model, HttpServletRequest request) {
+        model.addAttribute("doc_u1", PageOfficeLink.openWindow(request, "/test/open/u1", "width:100%;height:100%;"));
+        model.addAttribute("doc_u2", PageOfficeLink.openWindow(request, "/test/open/u2", "width:100%;height:100%;"));
+        return "test/write";
+    }
+
+    @RequestMapping(value = "/open/{user:\\w+}", method = RequestMethod.GET)
+    public String open(@PathVariable("user") String user, HttpServletRequest request) {
+        String url = DocumentUtils.getActualPathUri("5e046c80de714d5aa1e9c2ab6d76dcad.docx");
+        PageOfficeCtrl ctrl = this.create(request);
+        ctrl.setCaption("文档X"); // 设置控件标题栏
+        ctrl.addCustomToolButton("切换全屏", "fullScreenSwitch", 4);
+
+        ctrl.setMenubar(false);
+        ctrl.setTimeSlice(2);
+
+        ctrl.webOpen(url, DocumentType.WORD.normalEdit(), user);
+        ctrl.setTagId("docCtrl");
+
+        return "test/popupEdit";
     }
 
 

@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author : Zhong Junbin
@@ -47,5 +48,15 @@ public interface DocumentRepo extends BaseRepo<Document, String> {
                                     @Param("pageSize") int pageSize,
                                     @Param("categoryId") String categoryId,
                                     @Param("docName") String docName);
+
+    long totalWithPersonal(@Param("accountId") String accountId,
+                           @Param("docName") String docName);
+
+    List<Document> pageWithPersonal(@Param("skip") int skip,
+                                    @Param("pageSize") int pageSize,
+                                    @Param("accountId") String accountId,
+                                    @Param("docName") String docName);
+
+    List<Map<String, Object>> statistics();
 
 }

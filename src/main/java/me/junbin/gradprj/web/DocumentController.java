@@ -1,10 +1,7 @@
 package me.junbin.gradprj.web;
 
 import com.google.gson.JsonObject;
-import com.zhuozhengsoft.pageoffice.FileSaver;
-import com.zhuozhengsoft.pageoffice.PDFCtrl;
-import com.zhuozhengsoft.pageoffice.PDFOpenModeType;
-import com.zhuozhengsoft.pageoffice.PageOfficeCtrl;
+import com.zhuozhengsoft.pageoffice.*;
 import me.junbin.commons.charset.Charsets;
 import me.junbin.commons.page.Page;
 import me.junbin.commons.page.PageRequest;
@@ -47,6 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static me.junbin.gradprj.util.DocumentUtils.getActualPath;
 import static me.junbin.gradprj.util.Global.*;
@@ -56,6 +55,10 @@ import static me.junbin.gradprj.util.Global.*;
  * @email : <a href="mailto:rekadowney@163.com">发送邮件</a>
  * @createDate : 2017/2/27 20:50
  * @description : 使用 FLUSHALL 命令清空整个 redis 数据库中的数据
+ * PageOffice 的并发控制是根据 {@link PageOfficeCtrl#webOpen(String, OpenModeType, String)}
+ * 方法中第一、三个参数来控制的，如果这两个参数完全一致则视为同一个用户的访问；
+ * 如果第一个参数采用 web url 方式并且仅仅是查询参数不同（比如：?type=1 和 ?type=2）的话，此时依然被
+ * 视为是同一个文档同一个用户
  */
 @Controller
 @RequestMapping(value = "/doc")
@@ -69,6 +72,7 @@ public class DocumentController extends BasePoController {
     private PermService permService;
     //@Autowired
     //private RequestMappingHandlerMapping handlerMapping;
+    private static final Lock lock = new ReentrantLock();
 
     @RequestMapping(value = "/upload", method = RequestMethod.GET)
     @RequiresPermissions(value = {"doc:*:upload"})
@@ -215,13 +219,13 @@ public class DocumentController extends BasePoController {
     public String redirectPage(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account) {
         Optional<Perm> perm = account.getPermList().stream().filter(Perm::isAttachable).findFirst();
         assert perm.isPresent();
-        return "redirect:/doc/" + perm.get().getId() + "/page/0/10";
+        return "redirect:/doc/" + perm.get().getId() + "/page/0/" + Global.DEFAULT_PAGE_SIZE;
     }
 
     @RequiresPermissions(value = {"channel:*:latest"})
     @RequestMapping(value = "/latest", method = RequestMethod.GET)
     public String latest() {
-        return "redirect:/doc/latest/0/10";
+        return "redirect:/doc/latest/0/" + Global.DEFAULT_PAGE_SIZE;
     }
 
     @RequiresPermissions(value = {"channel:*:latest"})
@@ -261,7 +265,7 @@ public class DocumentController extends BasePoController {
     public String page(@PathVariable("categoryId") String categoryId,
                        @PathVariable("pageOffset") int pageOffset,
                        @PathVariable("pageSize") int pageSize,
-                       Model model) {
+                       Model model, @ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account) {
         Perm category = permService.selectById(categoryId);
         Page<Document> documentPage = documentService.pageCategory(categoryId,
                 new PageRequest(pageOffset, pageSize));
@@ -269,7 +273,9 @@ public class DocumentController extends BasePoController {
         if (!CollectionUtils.isEmpty(documentList)) {
             urlViewRebuild(documentList);
         }
-        model.addAttribute("menuTree", MyGsonor.SN_SIMPLE.toJson(Global.getCategoryTree()));
+        //model.addAttribute("menuTree", MyGsonor.SN_SIMPLE.toJson(Global.getCategoryTree()));
+        List<JsonObject> tree = Global.getCategoryMenuTree(account.getRelationPermList());
+        model.addAttribute("menuTree", MyGsonor.SN_SIMPLE.toJson(tree));
         model.addAttribute("category", category);
         model.addAttribute("page", documentPage);
         return "doc/page";
@@ -481,6 +487,7 @@ public class DocumentController extends BasePoController {
         ctrl.addCustomToolButton("保存", "saveFile", 1);
 
         ctrl.setMenubar(false);
+        ctrl.setTimeSlice(Global.DOC_EDIT_TIME_SLICE);
 
         ctrl.webOpen(url, document.getDocType().normalEdit(), account.getPrincipal());
         ctrl.setTagId("docCtrl");
@@ -514,6 +521,7 @@ public class DocumentController extends BasePoController {
         ctrl.setCaption(document.getDocName()); // 设置控件标题栏
         ctrl.addCustomToolButton("切换全屏", "fullScreenSwitch", 4);
         ctrl.addCustomToolButton("保存", "saveFile", 1);
+        ctrl.setTimeSlice(Global.DOC_EDIT_TIME_SLICE);
         ctrl.setMenubar(false);
 
         ctrl.webOpen(url, document.getDocType().normalEdit(), account.getPrincipal());
@@ -533,5 +541,59 @@ public class DocumentController extends BasePoController {
         fileSaver.saveToFile(path.toString());
         fileSaver.close();
     }
+
+    // 特别注意：JS 'false' 不等于 false，字符串只有空串才为 false，其他情况下都是 true
+    @ResponseBody
+    @RequiresAuthentication
+    @RequestMapping(value = "/search/page/{pageOffset:\\d+}/{pageSize:\\d+}", method = RequestMethod.POST)
+    public Object searchPage(@RequestParam String searchText,
+                             String categoryId,
+                             @PathVariable("pageOffset") int pageOffset,
+                             @PathVariable("pageSize") int pageSize) {
+        if (StringUtils.isEmpty(searchText)) {
+            searchText = "";
+        }
+        if (StringUtils.length(categoryId) == 32) {
+            return documentService.pageSearchCategory(categoryId, searchText, new PageRequest(pageOffset, pageSize));
+        } else {
+            return documentService.pageSearch(searchText, new PageRequest(pageOffset, pageSize));
+        }
+    }
+
+/*
+    @RequiresAuthentication
+    @RequestMapping(value = "/{categoryId:\\w{32}}/page/{pageOffset:\\d+}/{pageSize:\\d+}", method = RequestMethod.GET)
+    public String page(@PathVariable("categoryId") String categoryId,
+                       @PathVariable("pageOffset") int pageOffset,
+                       @PathVariable("pageSize") int pageSize,
+                       Model model) {
+        Perm category = permService.selectById(categoryId);
+        Page<Document> documentPage = documentService.pageCategory(categoryId,
+                new PageRequest(pageOffset, pageSize));
+        List<Document> documentList = documentPage.getContent();
+        if (!CollectionUtils.isEmpty(documentList)) {
+            urlViewRebuild(documentList);
+        }
+        model.addAttribute("menuTree", MyGsonor.SN_SIMPLE.toJson(Global.getCategoryTree()));
+        model.addAttribute("category", category);
+        model.addAttribute("page", documentPage);
+        return "doc/page";
+    }
+
+    @ResponseBody
+    @RequiresAuthentication
+    @RequestMapping(value = "/{categoryId:\\w{32}}/page/{pageOffset:\\d+}/{pageSize:\\d+}", method = {RequestMethod.POST})
+    public Object pageAjax(@PathVariable("categoryId") String categoryId,
+                           @PathVariable("pageOffset") int pageOffset,
+                           @PathVariable("pageSize") int pageSize) {
+        Page<Document> documentPage = documentService.pageCategory(categoryId,
+                new PageRequest(pageOffset, pageSize));
+        List<Document> documentList = documentPage.getContent();
+        if (!CollectionUtils.isEmpty(documentList)) {
+            urlViewRebuild(documentList);
+        }
+        return documentPage;
+    }
+*/
 
 }

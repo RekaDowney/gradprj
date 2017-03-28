@@ -2,6 +2,7 @@ package me.junbin.gradprj.repository;
 
 import me.junbin.gradprj.annotation.MyBatisMapper;
 import me.junbin.gradprj.domain.Role;
+import me.junbin.gradprj.enumeration.PermType;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
@@ -84,5 +85,16 @@ public interface RoleRepo extends BaseRepo<Role, String> {
     boolean isAssociateWithAccount(String id);
 
     boolean isAssociateWithPerm(String id);
+
+    List<String> getPermIdList(@Param("roleId") String roleId);
+
+    List<String> getPermIdWithType(@Param("roleId") String roleId,
+                                   @Param("permType") PermType permType);
+
+    long total(@Param("name") String name);
+
+    List<Role> page(@Param("skip") int skip,
+                    @Param("pageSize") int pageSize,
+                    @Param("name") String name);
 
 }

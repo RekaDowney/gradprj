@@ -3,8 +3,10 @@ package me.junbin.gradprj.service;
 import me.junbin.commons.page.Page;
 import me.junbin.commons.page.PageRequest;
 import me.junbin.gradprj.domain.Document;
+import me.junbin.gradprj.enumeration.DocumentType;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author : Zhong Junbin
@@ -28,8 +30,14 @@ public interface DocumentService extends BaseService<Document, String> {
 
     Page<Document> pageCategory(String categoryId, PageRequest pageRequest);
 
+    Page<Document> pagePersonal(String accountId, PageRequest pageRequest);
+
+    Page<Document> pagePersonal(String accountId, PageRequest pageRequest, String docName);
+
     Page<Document> pageSearch(String docName, PageRequest pageRequest);
 
     Page<Document> pageSearchCategory(String categoryId, String docName, PageRequest pageRequest);
+
+    Map<DocumentType, Integer> statistics();
 
 }

@@ -157,6 +157,37 @@
         ORDER BY d.created_time DESC LIMIT #{skip}, #{pageSize}
     </select>
 
+    <select id="totalWithPersonal" resultType="long">
+        SELECT count(*)
+        FROM document
+        WHERE valid = TRUE AND creator = #{accountId}
+        <if test="docName != null and docName != '%%'">
+            AND doc_name LIKE #{docName}
+        </if>
+    </select>
+
+    <select id="pageWithPersonal" resultMap="docMap">
+        SELECT
+        <include refid="documentColumns">
+            <property name="doc" value="d"/>
+        </include>
+        FROM document d WHERE d.valid = TRUE
+        AND creator = #{accountId}
+        <if test="docName != null and docName != ''">
+            AND doc_name LIKE #{docName}
+        </if>
+        ORDER BY d.created_time DESC LIMIT #{skip}, #{pageSize}
+    </select>
+
+    <select id="statistics" resultType="Map">
+        SELECT
+            doc_type docType,
+            count(*) num
+        FROM document
+        WHERE valid = TRUE
+        GROUP BY doc_type;
+    </select>
+
     <resultMap id="docMap" type="Document">
         <id property="id" column="d_id"/>
         <result property="docUrl" column="d_docUrl"/>

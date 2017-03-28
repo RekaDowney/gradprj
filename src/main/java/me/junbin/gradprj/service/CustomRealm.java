@@ -4,7 +4,6 @@ import me.junbin.gradprj.domain.Account;
 import me.junbin.gradprj.domain.Perm;
 import me.junbin.gradprj.domain.Role;
 import me.junbin.gradprj.enumeration.PermType;
-import me.junbin.gradprj.util.AccountMgr;
 import me.junbin.gradprj.util.Global;
 import me.junbin.gradprj.util.RelationResolver;
 import org.apache.commons.lang3.StringUtils;
@@ -82,7 +81,8 @@ public class CustomRealm extends AuthorizingRealm {
                                   .collect(Collectors.toList());
         account.setRelationPermList(RelationResolver.relationalize(menu));
 
-        AccountMgr.store(account);
+        // 交由 Controller 层进行存储管理
+        // AccountMgr.store(account);
 
         return new SimpleAuthenticationInfo(account, password, getName());
     }

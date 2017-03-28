@@ -1,5 +1,7 @@
 package me.junbin.gradprj.service;
 
+import me.junbin.commons.page.Page;
+import me.junbin.commons.page.PageRequest;
 import me.junbin.gradprj.domain.Role;
 
 import java.util.List;
@@ -70,5 +72,13 @@ public interface RoleService extends BaseService<Role, String> {
      * @return 角色
      */
     Role forcedSelectById(String id);
+
+    List<String> getPermIdList(String roleId);
+
+    List<String> getCategoryPermId(String roleId);
+
+    Page<Role> page(PageRequest pageRequest);
+
+    Page<Role> page(String name, PageRequest pageRequest);
 
 }

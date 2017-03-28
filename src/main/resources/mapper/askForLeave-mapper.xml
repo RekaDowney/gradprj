@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="me.junbin.gradprj.repository.AskForLeaveRepo">
+
+    <insert id="insert" parameterType="AskForLeave">
+        INSERT INTO ask_for_leave (id, doc_url, doc_name, doc_type, creator, created_time,
+                                   modifier, modified_time, distributed, valid)
+        VALUES (#{id}, #{docUrl}, #{docName}, #{docType}, #{creator}, #{createdTime},
+                #{modifier}, #{modifiedTime}, #{distributed}, #{valid});
+    </insert>
+
+    <insert id="batchInsert">
+        INSERT INTO ask_for_leave (id, doc_url, doc_name, doc_type, creator, created_time,
+        modifier, modified_time, distributed, valid)
+        VALUES
+        <foreach collection="domainList" item="afl" separator=",">
+            (#{afl.id}, #{afl.docUrl}, #{afl.docName}, #{afl.docType}, #{afl.creator}, #{afl.createdTime},
+            #{afl.modifier}, #{afl.modifiedTime}, #{afl.distributed}, #{afl.valid})
+        </foreach>
+    </insert>
+
+    <delete id="delete" parameterType="String">
+        UPDATE ask_for_leave
+        SET valid = FALSE
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteAfl">
+        UPDATE ask_for_leave
+        SET valid         = FALSE,
+            modifier      = #{modifier},
+            modified_time = #{modifiedTime}
+        WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="AskForLeave">
+        UPDATE ask_for_leave
+        SET modifier      = #{modifier},
+            modified_time = #{modifiedTime},
+            distributed   = #{distributed}
+        WHERE id = #{id}
+    </update>
+
+    <sql id="aflColumns">
+        ${afl}.id afl_id,
+        ${afl}.doc_url afl_docUrl,
+        ${afl}.doc_name afl_docName,
+        ${afl}.doc_type afl_docType,
+        ${afl}.creator afl_creator,
+        ${afl}.created_time afl_createdTime,
+        ${afl}.modifier afl_modifier,
+        ${afl}.modified_time afl_modifiedTime,
+        ${afl}.distributed afl_distributed,
+        ${afl}.valid afl_valid
+    </sql>
+
+    <select id="selectById" parameterType="String" resultMap="aflMap">
+        SELECT
+        <include refid="aflColumns">
+            <property name="afl" value="afl"/>
+        </include>
+        FROM ask_for_leave afl
+        WHERE id = #{id} AND valid = TRUE
+    </select>
+
+    <select id="selectAll" resultMap="aflMap">
+        SELECT
+        <include refid="aflColumns">
+            <property name="afl" value="afl"/>
+        </include>
+        FROM ask_for_leave afl WHERE valid = TRUE ORDER BY afl.created_time DESC
+    </select>
+
+    <select id="total" resultType="long">
+        SELECT count(*)
+        FROM ask_for_leave
+        WHERE valid = TRUE
+        <if test="creator != null and creator != ''">
+            AND creator = #{creator}
+        </if>
+    </select>
+
+    <select id="page" resultMap="aflMap">
+        SELECT
+        <include refid="aflColumns">
+            <property name="afl" value="afl"/>
+        </include>
+        FROM ask_for_leave afl WHERE afl.valid = TRUE
+        <if test="creator != null and creator != ''">
+            AND creator = #{creator}
+        </if>
+        ORDER BY afl.created_time DESC LIMIT #{skip}, #{pageSize}
+    </select>
+
+    <resultMap id="aflMap" type="AskForLeave">
+        <id property="id" column="afl_id"/>
+        <result property="docUrl" column="afl_docUrl"/>
+        <result property="docName" column="afl_docName"/>
+        <result property="docType" column="afl_docType"/>
+        <result property="creator" column="afl_creator"/>
+        <result property="createdTime" column="afl_createdTime"/>
+        <result property="modifier" column="afl_modifier"/>
+        <result property="modifiedTime" column="afl_modifiedTime"/>
+        <result property="distributed" column="afl_distributed"/>
+        <result property="valid" column="afl_valid"/>
+    </resultMap>
+
+</mapper>

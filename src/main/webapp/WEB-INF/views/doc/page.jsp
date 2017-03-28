@@ -104,9 +104,22 @@
 <div class="header">
     <img src="${baseUrl}/resources/images/banner.png" height="40"/>
     <div class="btn-container">
+        <shiro:hasPermission name="ask:for:leave">
+            <button id="askForLeave" type="button" class="btn btn-info">我要请假</button>
+        </shiro:hasPermission>
         <shiro:hasPermission name="channel:*:latest">
             <a class="btn btn-info" href="${baseUrl}/doc/latest">最新入库文档</a>
         </shiro:hasPermission>
+        <shiro:hasPermission name="manage:*:backend">
+            <a class="btn btn-info" href="${baseUrl}/backend/index">进入后台管理</a>
+        </shiro:hasPermission>
+        <%-- JSTL 支持在一个 EL 表达式中使用自定义函数 --%>
+        <shiro:hasRole name="${global:registeredUserRoleKey()}">
+            <c:if test="${loginAccount.principal ne global:visitorKey()}">
+                <a class="btn btn-success" href="${baseUrl}/account/personal/center">个人中心</a>
+                <span>　</span>
+            </c:if>
+        </shiro:hasRole>
         <c:choose>
             <c:when test="${loginAccount.principal eq global:visitorKey()}">
                 <a class="btn btn-primary" href="${baseUrl}/auth/login">登陆</a>
@@ -132,8 +145,18 @@
             <div class="function-btn-group" style="margin-top: 2px;margin-left: 2px;">
                 <a id="upload" class="btn btn-primary">上传文档到当前栏目</a>
             </div>
-            <hr style="border: 0;border-top: 1px solid #3CADD8;margin-top: 5px;margin-bottom: 5px;"/>
         </shiro:hasPermission>
+        <div id="search-box" class="input-group col-md-3" style="margin-top: 2px;margin-left: 2px;">
+            <input id="searchText" type="text" class="form-control" placeholder="请输入文档名称" style="width: 180px;"/>
+            <span class="input-group-btn">
+                    <button id="search" type="button" class="btn btn-info">搜索</button>
+                    <button id="searchCurCategory" type="button" class="btn btn-info"
+                            style="margin-left: 2px;">本栏目搜索</button>
+                </span>
+            <input id="searchTextCache" type="hidden" name="searchText" value=""/>
+            <input id="searchCategory" type="hidden" name="searchCategory" value="false"/>
+        </div>
+        <hr style="border: 0;border-top: 1px solid #3CADD8;margin-top: 5px;margin-bottom: 5px;"/>
         <div id="menuContainer">
             <ul id="categoryMenu" class="ztree" style=" width:100%;"></ul>
         </div>
@@ -190,7 +213,8 @@
 <div class="tail">
     CopyRight © 2017-2018
 </div>
-
+<input id="aflResult" type="hidden" value=""/>
+<a id="openLeave" target="_blank" href="" hidden="hidden"></a>
 <script type="text/javascript">
 
     $(function () {
@@ -239,6 +263,9 @@
         function onClick(e, treeId, treeNode) {
             var pageOffset = 0;
             var pageSize = getPageSize();
+            // 清空搜索字段缓存
+            $('#searchTextCache').val('');
+            $('#searchCategory').val('false');
             listChange(pageOffset, pageSize);
         }
 
@@ -271,7 +298,17 @@
                     }
                     var pageOffset = num - 1;
                     var pageSize = getPageSize();
-                    listChange(pageOffset, pageSize);
+                    // 分页处理时确认是否有搜素条件
+                    var searchText = $('#searchTextCache').val();
+                    if (searchText.length == 0) { // 没有搜索条件
+                        listChange(pageOffset, pageSize);
+                    } else { // 有搜索条件
+                        if ($('#searchCategory').val() === 'true') {
+                            search(true, pageOffset);
+                        } else {
+                            search(false, pageOffset);
+                        }
+                    }
                 }
             });
             $('#paginator').hide();
@@ -291,7 +328,17 @@
                     }
                     var pageOffset = num - 1;
                     var pageSize = getPageSize();
-                    listChange(pageOffset, pageSize);
+                    // 分页处理时确认是否有搜素条件
+                    var searchText = $('#searchTextCache').val();
+                    if (searchText.length == 0) { // 没有搜索条件
+                        listChange(pageOffset, pageSize);
+                    } else { // 有搜索条件
+                        if ($('#searchCategory').val() === 'true') {
+                            search(true, pageOffset);
+                        } else {
+                            search(false, pageOffset);
+                        }
+                    }
                 }
             });
         }
@@ -315,7 +362,6 @@
             var node = tree.getSelectedNodes()[0];
             $("title").html(node.name);
             var path = "${baseUrl}/doc/" + node.id + '/page/' + pageOffset + '/' + pageSize;
-            var listBody = $(".main-right-body");
             // 设置上传到本栏目的按钮链接
             $("#upload").attr('href', "${baseUrl}/doc/" + node.id + "/upload");
             $.ajax({
@@ -325,39 +371,10 @@
                 success: function (data) {
                     updatePaginator(data);
                     if (data.content.length == 0) {
-                        listBody.empty().append("<span style='font-size: 20px;color: red;'>本栏目暂无文档！</span>");
+                        $(".main-right-body").empty().append("<span style='font-size: 20px;color: red;'>本栏目暂无文档！</span>");
                         return;
                     }
-                    var res = "<div class='list-group'>";
-                    var docPage = data.content;
-                    var dateTime;
-                    var i, doc;
-                    if (canDownload) { // 有下载权限
-                        for (i = 0; doc = docPage[i]; i++) {
-                            res += "<a href='${baseUrl}" + doc.docUrl + "' target='_blank' class='list-group-item'>";
-                            res += "<span class='docId' hidden>" + doc.id + "</span>";
-                            res += "<span class='docName'>" + doc.docName + "</span>";
-                            res += "<span class='download btn btn-info' href='${baseUrl}/doc/" + doc.id + "/download'>下载</span>";
-                            dateTime = DateTime.parse(doc.createdTime, 'yyyy-MM-dd HH:mm:ss');
-                            res += "<span class='time-badge'>" + dateTime.format('yyyy-MM-dd HH') + "</span>";
-                            if (dateTime.plusDays(1).isAfterNow()) {
-                                res += "<span class='badge'>新</span>";
-                            }
-                        }
-                    } else {
-                        for (i = 0; doc = docPage[i]; i++) {
-                            res += "<a href='${baseUrl}" + doc.docUrl + "' target='_blank' class='list-group-item'>";
-                            res += "<span class='docId' hidden>" + doc.id + "</span>";
-                            res += "<span class='docName'>" + doc.docName + "</span>";
-                            dateTime = DateTime.parse(doc.createdTime, 'yyyy-MM-dd HH:mm:ss');
-                            res += "<span class='time-badge'>" + dateTime.format('yyyy-MM-dd HH') + "</span>";
-                            if (dateTime.plusDays(1).isAfterNow()) {
-                                res += "<span class='badge'>新</span>";
-                            }
-                        }
-                    }
-                    res += "</div>";
-                    listBody.empty().append(res);
+                    renderList(data);
                 }
             })
         }
@@ -373,6 +390,39 @@
                     currentPage: page.curPageOffset + 1
                 });
             }
+        }
+
+        function renderList(data) {
+            var res = "<div class='list-group'>";
+            var docPage = data.content;
+            var dateTime;
+            var i, doc;
+            if (canDownload) { // 有下载权限
+                for (i = 0; doc = docPage[i]; i++) {
+                    res += "<a href='${baseUrl}" + doc.docUrl + "' target='_blank' class='list-group-item'>";
+                    res += "<span class='docId' hidden>" + doc.id + "</span>";
+                    res += "<span class='docName'>" + doc.docName + "</span>";
+                    res += "<span class='download btn btn-info' href='${baseUrl}/doc/" + doc.id + "/download'>下载</span>";
+                    dateTime = DateTime.parse(doc.createdTime, 'yyyy-MM-dd HH:mm:ss');
+                    res += "<span class='time-badge'>" + dateTime.format('yyyy-MM-dd HH') + "</span>";
+                    if (dateTime.plusDays(1).isAfterNow()) {
+                        res += "<span class='badge'>新</span>";
+                    }
+                }
+            } else {
+                for (i = 0; doc = docPage[i]; i++) {
+                    res += "<a href='${baseUrl}" + doc.docUrl + "' target='_blank' class='list-group-item'>";
+                    res += "<span class='docId' hidden>" + doc.id + "</span>";
+                    res += "<span class='docName'>" + doc.docName + "</span>";
+                    dateTime = DateTime.parse(doc.createdTime, 'yyyy-MM-dd HH:mm:ss');
+                    res += "<span class='time-badge'>" + dateTime.format('yyyy-MM-dd HH') + "</span>";
+                    if (dateTime.plusDays(1).isAfterNow()) {
+                        res += "<span class='badge'>新</span>";
+                    }
+                }
+            }
+            res += "</div>";
+            $(".main-right-body").empty().append(res);
         }
 
         $(".main-right-body").on('click', 'span.download.btn.btn-info', function (event) {
@@ -407,9 +457,93 @@
 //            return res[1];
 //        }
 
+        // ----------------------------- 搜索 -----------------------------
+        $('#search-box').on('click', '#search', function () {
+            search(false, 0);
+        }).on('click', '#searchCurCategory', function () {
+            search(true, 0);
+        });
+
+        /**
+         *
+         * @param scc 在当前栏目下搜索，true | false，特别注意：不是字符串的 'true' 和 'false'
+         * @param pageOffset 页面偏移量
+         */
+        function search(scc, pageOffset) {
+            var searchCategory = $('#searchCategory');
+            searchCategory.val(scc);
+            var searchText = $('#searchText');
+            var text = searchText.val().trim();
+            // 搜索内容为空
+            if (text.length == 0) {
+                layer.open({
+                    type: 0,
+                    title: '错误',
+                    icon: 5,
+                    content: '请输入搜索内容',
+                    shadeClose: true
+                });
+                return;
+            }
+            $('#searchTextCache').val(text);
+            var param;
+            if (scc) {
+                var tree = $.fn.zTree.getZTreeObj('categoryMenu');
+                var node = tree.getSelectedNodes()[0];
+                param = {searchText: text, categoryId: node.id};
+            } else {
+                param = {searchText: text};
+            }
+            $.ajax({
+                url: "${baseUrl}/doc/search/page/" + pageOffset + '/' + getPageSize(),
+                type: "POST",
+                data: param,
+                cache: false,
+                success: function (data) {
+                    updatePaginator(data);
+                    if (data.content.length == 0) {
+                        $(".main-right-body").empty().append("<span style='font-size: 20px;color: red;'>搜索结果为空</span>");
+                        return;
+                    }
+                    renderList(data);
+                }
+            });
+        }
+
+        // ----------------------------- 搜索 -----------------------------
+
+        // ----------------------------- 请假 -----------------------------
+        $('.btn-container').on('click', '#askForLeave', function () {
+            var layerIndex = layer.open({
+                type: 2,
+                title: '请假',
+                content: '${baseUrl}/ask/for/leave',
+                area: ['80%', '80%'],
+                resize: false,
+                end: function () {
+                    var res = $('#aflResult').val();
+                    if (res.length > 0) {
+                        try {
+                            var data = JSON.parse(res);
+                            window.open(data.url);
+//                            var openLeave = $('#openLeave');
+//                            openLeave.attr('href', data.url);
+//                            openLeave.trigger('click');
+                        } catch (e) {
+                            layer.open({
+                                title: '错误',
+                                icon: 5,
+                                shadeClose: false,
+                                content: res
+                            });
+                        }
+                    }
+                }
+            });
+        });
+        // ----------------------------- 请假 -----------------------------
+
     });
 </script>
 </body>
-<div id="askForLeave" style="width: 60%; height: 40%;">
-</div>
 </html>

@@ -1,0 +1,42 @@
+/* Bootstrap 的 row 外距设置 */
+.row {
+    margin: 10px 10px 0;
+}
+
+/* Bootstrap 的 col 居中 */
+.col-center {
+    float: none;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Bootstrap 的 table 的列内距设置 */
+.table-condensed > thead > tr > th,
+.table-condensed > tbody > tr > th,
+.table-condensed > tfoot > tr > th,
+.table-condensed > thead > tr > td,
+.table-condensed > tbody > tr > td,
+.table-condensed > tfoot > tr > td {
+    padding: 5px
+}
+
+/* 在 Bootstrap 的 基础上再加上 hr 的右下外距 */
+hr {
+    margin-top: 0;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    border: 0;
+    border-top: 1px solid #8C0C0C;
+}
+
+/* 去掉 a 标签的下划线 */
+a {
+    text-decoration: none;
+}
+
+/* jqPaginator 分页导航栏页码宽度设置 */
+.pagination > li.page a {
+    width: 40px;
+    text-align: center;
+}
