@@ -8,24 +8,31 @@ import me.junbin.commons.page.PageRequest;
 import me.junbin.gradprj.domain.Account;
 import me.junbin.gradprj.domain.Document;
 import me.junbin.gradprj.domain.Role;
+import me.junbin.gradprj.enumeration.DocSuffix;
+import me.junbin.gradprj.enumeration.DocumentType;
 import me.junbin.gradprj.service.AccountService;
 import me.junbin.gradprj.service.DocumentService;
 import me.junbin.gradprj.service.RoleService;
-import me.junbin.gradprj.util.AccountMgr;
-import me.junbin.gradprj.util.EncryptUtils;
-import me.junbin.gradprj.util.Global;
-import me.junbin.gradprj.util.ZTreeUtils;
+import me.junbin.gradprj.util.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import static me.junbin.gradprj.util.Global.LOGIN_ACCOUNT_KEY;
 
 /**
  * @author : Zhong Junbin
@@ -51,6 +58,27 @@ public class AccountController extends BaseRestController {
         JsonObject res = getSuccessResult();
         res.addProperty("exists", account != null);
         return res;
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/excel/upload", method = RequestMethod.POST)
+    @RequiresPermissions(value = {"manage:*:user"})
+    public Object upload(HttpServletRequest request) throws IOException, InvalidFormatException {
+        MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+        Map<String, MultipartFile> fileMap = multipartRequest.getFileMap();
+        int size = fileMap.size();
+        if (size != 1) {
+            return getFailResult("请只选择一个Excel文件");
+        }
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        MultipartFile file = fileMap.values().stream().findFirst().get();
+        DocSuffix docSuffix = DocSuffix.of(file.getOriginalFilename());
+        if (docSuffix.getType() != DocumentType.EXCEL) {
+            return getFailResult("请只选择一个Excel文件");
+        }
+        List<Account> accountList = ExcelUtils.parse(file.getInputStream());
+        accountService.replaceInsert(accountList);
+        return getSuccessResult(String.format("成功插入或者覆盖%d个账户", accountList.size()));
     }
 
     @RequiresPermissions(value = "manage:*:user")
@@ -82,7 +110,7 @@ public class AccountController extends BaseRestController {
     @RequiresPermissions(value = "manage:*:user")
     @RequestMapping(value = "/{accountId:\\w{32}}/pwd/reset", method = RequestMethod.POST)
     public Object resetPwd(@PathVariable(value = "accountId") String accountId,
-                           @ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account) {
+                           @ModelAttribute(LOGIN_ACCOUNT_KEY) Account account) {
         Account db = accountService.selectById(accountId);
         String aPrincipal = db.getPrincipal();
         db.setPassword(EncryptUtils.md5Encrypt(Global.DEFAULT_PASSWORD, aPrincipal));
@@ -101,7 +129,7 @@ public class AccountController extends BaseRestController {
     @RequiresPermissions(value = "manage:*:user")
     @RequestMapping(value = "/{accountId:\\w{32}}/delete", method = RequestMethod.POST)
     public Object delete(@PathVariable(value = "accountId") String accountId,
-                         @ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account) {
+                         @ModelAttribute(LOGIN_ACCOUNT_KEY) Account account) {
         Account delAccount = accountService.selectById(accountId);
         delAccount.setValid(false);
         delAccount.setModifier(account.getId());
@@ -164,14 +192,14 @@ public class AccountController extends BaseRestController {
 
     @RequiresRoles(value = {Global.REGISTERED_USER_ROLE_NAME})
     @RequestMapping(value = "/personal/center", method = RequestMethod.GET)
-    public String personalCenter(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account, Model model) {
+    public String personalCenter(@ModelAttribute(LOGIN_ACCOUNT_KEY) Account account, Model model) {
         model.addAttribute("account", account);
         return "common/index";
     }
 
     @RequiresRoles(value = {Global.REGISTERED_USER_ROLE_NAME})
     @RequestMapping(value = "/doc/page", method = RequestMethod.GET)
-    public String docPage(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account, Model model) {
+    public String docPage(@ModelAttribute(LOGIN_ACCOUNT_KEY) Account account, Model model) {
         model.addAttribute("page", documentService.pagePersonal(account.getId(),
                 new PageRequest(0, Global.DEFAULT_PAGE_SIZE)));
         return "common/manageDoc";
@@ -180,7 +208,7 @@ public class AccountController extends BaseRestController {
     @ResponseBody
     @RequiresRoles(value = {Global.REGISTERED_USER_ROLE_NAME})
     @RequestMapping(value = "/doc/page/{pageOffset:\\d+}/{pageSize:\\d+}", method = RequestMethod.POST)
-    public Object docPageAjax(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account,
+    public Object docPageAjax(@ModelAttribute(LOGIN_ACCOUNT_KEY) Account account,
                               @PathVariable("pageOffset") int pageOffset,
                               @PathVariable("pageSize") int pageSize,
                               @RequestParam(value = "docName", required = false) String docName) {
@@ -192,7 +220,7 @@ public class AccountController extends BaseRestController {
     @RequiresRoles(value = {Global.REGISTERED_USER_ROLE_NAME})
     @RequestMapping(value = "/doc/{docId:\\w{32}}/delete", method = RequestMethod.POST)
     public Object docDelete(@PathVariable("docId") String docId,
-                            @ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account) {
+                            @ModelAttribute(LOGIN_ACCOUNT_KEY) Account account) {
         Document document = documentService.selectById(docId);
         String docName = document.getDocName();
         String accountId = account.getId();
@@ -210,7 +238,7 @@ public class AccountController extends BaseRestController {
     }
 
     @RequestMapping(value = "/pwd/modify", method = RequestMethod.GET)
-    public String modify(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account, Model model) {
+    public String modify(@ModelAttribute(LOGIN_ACCOUNT_KEY) Account account, Model model) {
         model.addAttribute("account", account);
         return "common/modifyAccount";
     }
@@ -218,7 +246,7 @@ public class AccountController extends BaseRestController {
     @ResponseBody
     @RequiresRoles(value = {Global.REGISTERED_USER_ROLE_NAME})
     @RequestMapping(value = "/pwd/modify", method = RequestMethod.POST)
-    public Object modify(@ModelAttribute(Global.LOGIN_ACCOUNT_KEY) Account account,
+    public Object modify(@ModelAttribute(LOGIN_ACCOUNT_KEY) Account account,
                          @RequestParam String srcPwd,
                          @RequestParam String newPwd) {
         String principal = account.getPrincipal();

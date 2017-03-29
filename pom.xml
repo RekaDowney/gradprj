@@ -221,6 +221,10 @@
             <groupId>org.jooq</groupId>
             <artifactId>joor</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
         <!-- utility -->
 
         <!-- log -->
@@ -886,6 +890,13 @@
                 <artifactId>joor</artifactId>
                 <version>${joor.version}</version>
             </dependency>
+            <!-- POI 操作 Excel -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>3.13</version>
+            </dependency>
+
             <!-- utility -->
 
             <!-- protostuff -->

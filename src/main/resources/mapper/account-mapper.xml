@@ -18,6 +18,23 @@
         </foreach>
     </insert>
 
+    <!--
+    # 发生键重复的时候将其他非重复键都复制到旧数据列中（如果主键不重复，那么将后来的主键覆盖原来的主键）
+    ## REPLACE tableName VALUES(), (), ();
+
+    # 如果发生键重复的时候将忽略后来的数据列
+    # INSERT IGNORE INTO tableName VALUES(), (), ();
+    -->
+    <insert id="replaceInsert" parameterType="List">
+        REPLACE account (id, principal, password, created_time, locked, valid)
+        VALUES
+        <foreach collection="accounts" separator="," index="index" item="account">
+            (#{account.id}, #{account.principal}, #{account.password},
+            #{account.createdTime}, #{account.locked}, #{account.valid})
+        </foreach>
+    </insert>
+
+
     <delete id="delete" parameterType="String">
         UPDATE account
         SET valid = FALSE

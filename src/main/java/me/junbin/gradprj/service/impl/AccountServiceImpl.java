@@ -63,6 +63,17 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
+    @Caching(evict = {@CacheEvict(key = "'accountList'")})
+    public void replaceInsert(List<Account> accounts) {
+        MyValidator.emptyThrows(accounts);
+        for (Account account : accounts) {
+            MyValidator.nullThrowsForProperty(account, "id", "principal", "password");
+        }
+        accountRepo.replaceInsert(accounts);
+    }
+
+    @Override
+    @Transactional
     @Caching(evict = {@CacheEvict(key = "#p0.id"), @CacheEvict(key = "'accountList'")})
     public int delete(Account account) {
         Args.notNull(account);

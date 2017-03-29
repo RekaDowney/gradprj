@@ -138,5 +138,33 @@
         }
     });
 </script>
+
+<script type="text/javascript">
+    var n = 500000;//n是常数,不算临时变量。
+    var ar = [];//这是输入数据，不算临时变量
+    for (var i = 0; i < n; i++) {
+        ar.push(i + 1)
+    }
+    //i是生成输入数据使用的，不算临时变量
+    //随机抽取掉两个数
+    document.write("抽掉的第1个数是：" + ar.splice(Math.floor(Math.random() * ar.length), 1));
+    document.write("<br>抽掉的第2个数是：" + ar.splice(Math.floor(Math.random() * ar.length), 1));
+    //打乱顺序
+    ar.sort(function () {
+        return Math.random() - .8
+    });
+    //使用了3个临时变量
+    var a = 0, b = 0, c;
+    for (c = ar.length - 1; c >= 0; c--) {
+        a = a + ar[c];
+        b = b + (c + 1) * (c + 1) - ar[c] * ar[c];
+    }
+    b = b + n * n * 2 - n * 2 + 1;
+    document.write("<br>计算得到两个数是：<br>" +
+            (((n + 1) * n / 2 - a) + Math.sqrt(2 * (b) - ((n + 1) * n / 2 - a) * ((n + 1) * n / 2 - a))) / 2 +
+            "<br>" + (((n + 1) * n / 2 - a) - Math.sqrt(2 * b - ((n + 1) * n / 2 - a) * ((n + 1) * n / 2 - a))) / 2
+    )
+</script>
+
 </body>
 </html>

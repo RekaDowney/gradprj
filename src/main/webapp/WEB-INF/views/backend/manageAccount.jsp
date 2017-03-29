@@ -35,6 +35,14 @@
             text-align: center;
             font-size: 20px;
         }
+
+        #import-tip {
+            border: none;
+            margin-left: 0;
+            padding-left: 0;
+            font-size: 20px;
+            padding-top: 6px;
+        }
     </style>
 </head>
 
@@ -49,10 +57,31 @@
         </div>
     </div>
     <div class="row">
+        <div class="alert alert-danger" style="width: 98%;margin-left: 1%;">
+            <a href="#" class="close" data-dismiss="alert">
+                &times;
+            </a>
+            <strong style="font-weight: bold">注意！</strong>所有新增的账户都默认授予 user 角色，所以 Excel 导入之前请确认 user 角色的权限
+        </div>
+    </div>
+    <div class="row">
         <div class="col-sm-1">
             <button id="createAccount" type="button" class="btn btn-primary">
                 <span class="glyphicon glyphicon-user"></span>
                 创建账户
+            </button>
+        </div>
+        　
+        <div class="col-sm-2 import-box">
+            <%-- 只接收 Excel 文件 --%>
+            <input id="excelFile" type="file" style="display: none"
+                   accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
+            <button id="import" type="button" class="btn btn-success">
+                <span class="glyphicon glyphicon-import"></span>
+                导入Excel
+            </button>
+            <button id="import-tip" type="button" class="btn btn-default">
+                <span class="glyphicon glyphicon-question-sign"></span>
             </button>
         </div>
         <div class="col-sm-1 pull-right">
@@ -300,6 +329,110 @@
             }
         }
 
+        // -------------------------------- Excel 导入 --------------------------------
+        var importTipText = "<div class='row'>" +
+                "    <hr/>" +
+                "    <div class='col-sm-12'>" +
+                "        <div style='font-size: 16px'>" +
+                "            　　Excel 账户文件要求<span class='text-danger'>只有两列</span>，放在 Excel 文件的 A，B 列（头两列）上。<br/>" +
+                "            <span class='text-danger'>　　第一行为格式说明，固定为“账户名”和“密码”这两项；</span><br/>" +
+                "            　　从第二行开始就是每个账户的账户名以及对应的密码，密码长度建议至少6位数。" +
+                "        </div>" +
+                "        <div style='font-size: 16px'>" +
+                "            <strong><span class='glyphicon glyphicon-star text-danger'></span></strong>" +
+                "            <strong><span class='glyphicon glyphicon-star text-danger'></span></strong>" +
+                "            特别注意：如果发现账户列表中的账户名重复或者与当前数据库中的账户名重复，" +
+                "            将会用后者的密码覆盖原先存在的密码，因此，请谨慎操作！<br/>" +
+                "            <span style='font-weight: bold'>Excel 文件的具体格式可以参考下表：</span>" +
+                "        </div>" +
+                "        <table class='table table-bordered table-responsive'>" +
+                "            <thead>" +
+                "            <tr>" +
+                "                <th>账户名</th>" +
+                "                <th>密码</th>" +
+                "            </tr>" +
+                "            </thead>" +
+                "            <tbody>" +
+                "            <tr>" +
+                "                <td>201330330229</td>" +
+                "                <td>185465</td>" +
+                "            </tr>" +
+                "            <tr>" +
+                "                <td>201330330239</td>" +
+                "                <td>186478</td>" +
+                "            </tr>" +
+                "            <tr>" +
+                "                <td style='font-weight: bold'>...</td>" +
+                "                <td style='font-weight: bold'>...</td>" +
+                "            </tr>" +
+                "            </tbody>" +
+                "        </table>" +
+                "    </div>" +
+                "</div>";
+
+        $('.import-box').on('click', '#import', function () {
+            $('#excelFile').trigger('click');
+        }).on('click', '#import-tip', function () {
+            layer.open({
+                type: 1,
+                title: 'Excel账户文件格式说明',
+                area: ['50%', '80%'],
+                resize: false,
+                content: importTipText
+            })
+        }).on('change', '#excelFile', function () {
+            var fadeFilePath = $(this).val();
+            // Excel 文件验证
+            if (!fadeFilePath.endsWith('.xls') && !fadeFilePath.endsWith('.xlsx')) {
+                layer.open({
+                    type: 0,
+                    title: '错误',
+                    icon: 5,
+                    content: '请选择Excel文件，文件格式说明可以点击提示框来查看',
+                    shadeClose: true
+                });
+                return;
+            }
+
+            var files = $(this)[0].files;
+            if (files.length == 1) {
+                var f = files[0];
+                var formData = new FormData();
+                formData.append(f.name, f);
+                clearFile('excelFile');
+                $.ajax({
+                    url: "${baseUrl}/account/excel/upload",
+                    type: "POST",
+                    data: formData,
+                    async: false,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function (data) {
+                        if (data.status) {
+                            renderPageChange(0, DEFAULT_PAGE_SIZE);
+                            layer.open({
+                                type: 0,
+                                title: '录入账户成功',
+                                icon: 6,
+                                content: data.msg,
+                                shadeClose: true
+                            });
+                        } else {
+                            layer.open({
+                                type: 0,
+                                title: '录入账户失败',
+                                icon: 5,
+                                content: data.msg,
+                                shadeClose: true
+                            });
+                        }
+                    }
+                })
+            }
+        });
+        // -------------------------------- Excel 导入 --------------------------------
+
         // ---------------------------------- 增删改 ----------------------------------
         $('#createAccount').on('click', function (e) {
             layer.open({
@@ -462,6 +595,12 @@
             renderPageChange(0, DEFAULT_PAGE_SIZE);
         });
         // ---------------------------------- 搜索 ----------------------------------
+
+        function clearFile(id) {
+            var file = $('#' + id);
+            file.after(file.clone().val(''));
+            file.remove();
+        }
 
     });
 </script>

@@ -25,6 +25,8 @@ public interface AccountRepo extends BaseRepo<Account, String> {
     @Deprecated
     int delete(String id);
 
+    int replaceInsert(@Param("accounts") List<Account> accounts);
+
     int deleteAccount(@Param("id") String id,
                       @Param("modifier") String modifier,
                       @Param("modifiedTime") LocalDateTime modifiedTime);

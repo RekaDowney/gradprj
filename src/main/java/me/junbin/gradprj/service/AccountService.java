@@ -16,6 +16,8 @@ import java.util.List;
  */
 public interface AccountService extends BaseService<Account, String> {
 
+    void replaceInsert(List<Account> accounts);
+
     int lock(Account account);
 
     int unlock(Account account);
