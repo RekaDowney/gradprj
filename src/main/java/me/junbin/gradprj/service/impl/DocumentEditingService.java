@@ -17,6 +17,9 @@ import java.util.concurrent.TimeUnit;
  * @createDate : 2017/3/22 14:46
  * @description : 其中 Key 表示 {@link me.junbin.gradprj.domain.Document#id}，
  * Value 表示 {@link me.junbin.gradprj.domain.Account#id}
+ * 通过 {@link RedisTemplate#expire(Object, long, TimeUnit)} 设置时效；通过
+ * {@link RedisTemplate#getExpire(Object)} 或者 {@link RedisTemplate#getExpire(Object, TimeUnit)}
+ * 获取剩余时间
  */
 @Service("documentEditingService")
 public class DocumentEditingService implements RedisCacheService<String, String> {

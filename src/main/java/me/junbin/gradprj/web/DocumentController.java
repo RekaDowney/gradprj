@@ -553,11 +553,17 @@ public class DocumentController extends BasePoController {
         if (StringUtils.isEmpty(searchText)) {
             searchText = "";
         }
+        Page<Document> documentPage;
         if (StringUtils.length(categoryId) == 32) {
-            return documentService.pageSearchCategory(categoryId, searchText, new PageRequest(pageOffset, pageSize));
+            documentPage = documentService.pageSearchCategory(categoryId, searchText, new PageRequest(pageOffset, pageSize));
         } else {
-            return documentService.pageSearch(searchText, new PageRequest(pageOffset, pageSize));
+            documentPage = documentService.pageSearch(searchText, new PageRequest(pageOffset, pageSize));
         }
+        List<Document> documentList = documentPage.getContent();
+        if (!CollectionUtils.isEmpty(documentList)) {
+            urlViewRebuild(documentList);
+        }
+        return documentPage;
     }
 
 /*

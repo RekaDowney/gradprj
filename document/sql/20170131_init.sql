@@ -262,22 +262,42 @@ AFTER INSERT ON document
 FOR EACH ROW
   BEGIN
     -- 变量声明
-    DECLARE doc_id CHAR(32);
-    DECLARE num_of_newest_table INT;
+    DECLARE new_doc_id CHAR(32);
+    DECLARE newest_doc_current_num BIGINT UNSIGNED;
+    DECLARE max_num_of_newest_doc BIGINT UNSIGNED;
+    DECLARE overflow_id BIGINT UNSIGNED;
 
-    SET doc_id := new.id;
+    -- 新入库的文档 ID
+    SET new_doc_id := new.id;
+
+    -- 当前最新入库的文档记录总数
     SELECT COUNT(*)
     FROM document_newest
-    INTO num_of_newest_table;
+    INTO newest_doc_current_num;
 
-    -- 如果最新入库文档这张表数量大于等于 50，那么删除最旧的一条记录
-    IF num_of_newest_table >= 50
+    -- 当前规定的最新入库文档的最大值
+    SELECT CAST(value AS UNSIGNED)
+    FROM dictionary
+    WHERE name = 'max_num_of_document_newest' AND valid = 1
+    INTO max_num_of_newest_doc;
+
+    -- 如果最新入库的文档数量大于等于规定的最大值，则删除比较旧的文档来保持最新入库的数量满足最大值约束
+    IF newest_doc_current_num >= max_num_of_newest_doc
     THEN
+      -- 获取超出最新入库文档最大值约束的最大ID
+      SELECT MIN(id)
+      FROM (SELECT id
+            FROM document_newest
+            ORDER BY id DESC
+            LIMIT max_num_of_newest_doc) temp
+      INTO overflow_id;
 
+      -- 删除所有比较旧的文档来保持最新入库的文档总数符合最大值约束
       DELETE FROM document_newest
-      WHERE id = (SELECT id
-                  FROM (SELECT min(id) id
-                        FROM document_newest) a);
+      WHERE id <= overflow_id;
+    END IF;
+
+    INSERT INTO document_newest (doc_id) VALUES (new_doc_id);
     /*
           -- MySQL 不支持下面的操作
           -- 即在 同一条 SQL 中，从表 A 查询出某个值之后，该值不能立即作为表 A 的更新操作
@@ -295,10 +315,6 @@ FOR EACH ROW
 
           -- 或者将 SELECT 出来的数据包装到另一张表里，这样就可以解决该问题了
     */
-    END IF;
-
-    INSERT INTO document_newest (doc_id) VALUES (doc_id);
-
   END$$
 DELIMITER ;
 

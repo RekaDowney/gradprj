@@ -238,7 +238,7 @@ public abstract class RelationResolver {
                            .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
     }
 
-    public static <R extends Relation<R, ID>, ID extends Serializable> List<R> relationalize(List<R> relations) {
+    public static <R extends Relation<R, ID>, ID extends Serializable> List<R> relationalizeByRecursive(List<R> relations) {
         Map<R, R> subParentMap = constructSubParentMap(relations);
         List<R> finalParent = allFinalParent(subParentMap).stream()
                                                           .sorted(Relation.WEIGHT_COMPARATOR)
@@ -258,6 +258,24 @@ public abstract class RelationResolver {
             dealSub(subParentMap, r);
         }
         current.setSub(sub);
+    }
+
+
+    public static <R extends Relation<R, ID>, ID extends Serializable> List<R> relationalize(List<R> relations) {
+        Map<R, R> subParentMap = constructSubParentMap(relations);
+        List<R> finalParent = allFinalParent(subParentMap);
+        Collections.sort(finalParent, Relation.WEIGHT_COMPARATOR);
+        Queue<R> queue = new ArrayDeque<>();
+        queue.addAll(finalParent);
+        R current;
+        List<R> sub;
+        while ((current = queue.poll()) != null) {
+            sub = sub(subParentMap, current);
+            Collections.sort(sub, Relation.WEIGHT_COMPARATOR);
+            current.setSub(sub);
+            queue.addAll(sub);
+        }
+        return finalParent;
     }
 
 }

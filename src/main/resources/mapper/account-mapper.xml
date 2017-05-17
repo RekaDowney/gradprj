@@ -4,7 +4,7 @@
 <mapper namespace="me.junbin.gradprj.repository.AccountRepo">
 
     <insert id="insert" parameterType="Account">
-        INSERT INTO account (id, principal, password, created_time, locked, valid)
+        REPLACE account (id, principal, password, created_time, locked, valid)
         VALUES (#{id}, #{principal}, #{password},
                 #{createdTime}, #{locked}, #{valid})
     </insert>

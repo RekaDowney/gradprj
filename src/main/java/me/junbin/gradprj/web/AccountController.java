@@ -98,7 +98,7 @@ public class AccountController extends BaseRestController {
         newAccount.setId(Global.uuid());
         newAccount.setCreatedTime(LocalDateTime.now());
         JsonObject res;
-        if (accountService.insert(newAccount) == 1) {
+        if (accountService.insert(newAccount) >= 1) {
             res = getSuccessResult(String.format("添加账户%s成功", aPrincipal));
         } else {
             res = getFailResult(String.format("添加账户%s失败", aPrincipal));
@@ -117,7 +117,7 @@ public class AccountController extends BaseRestController {
         db.setModifier(account.getId());
         db.setModifiedTime(LocalDateTime.now());
         JsonObject res;
-        if (accountService.update(db) == 1) {
+        if (accountService.update(db) >= 1) {
             res = getSuccessResult(String.format("重置账户%s的密码为“123456”成功", aPrincipal));
         } else {
             res = getFailResult(String.format("重置账户%s的密码为“123456”失败", aPrincipal));
@@ -135,7 +135,7 @@ public class AccountController extends BaseRestController {
         delAccount.setModifier(account.getId());
         delAccount.setModifiedTime(LocalDateTime.now());
         JsonObject res;
-        if (accountService.delete(delAccount) == 1) {
+        if (accountService.delete(delAccount) >= 1) {
             res = getSuccessResult(String.format("删除账户%s成功", delAccount.getPrincipal()));
             AccountMgr.removeByAccountId(delAccount.getId());
         } else {
@@ -158,7 +158,7 @@ public class AccountController extends BaseRestController {
     @ResponseBody
     @RequiresPermissions(value = "manage:*:user")
     @RequestMapping(value = "/{accountId:\\w{32}}/role/grant", method = RequestMethod.POST)
-    public Object grantPerm(@RequestBody String roleIdArr,
+    public Object grantRole(@RequestBody String roleIdArr,
                             @PathVariable(value = "accountId") String accountId) {
         JsonArray array = new JsonParser().parse(roleIdArr).getAsJsonArray();
         Account account = accountService.selectById(accountId);
@@ -230,7 +230,7 @@ public class AccountController extends BaseRestController {
         document.setModifier(accountId);
         document.setModifiedTime(LocalDateTime.now());
         document.setValid(false);
-        if (documentService.delete(document) == 1) {
+        if (documentService.delete(document) >= 1) {
             return getSuccessResult(String.format("删除文档“%s”成功", docName));
         } else {
             return getFailResult(String.format("删除文档“%s”失败", docName));
